@@ -38,6 +38,13 @@ func (r *RolePostgres) GetById(id int) (models.Role, error) {
 	return role, err
 }
 
+func (r *RolePostgres) GetByName(name string) (models.Role, error) {
+	var role models.Role
+	query := fmt.Sprintf("SELECT * FROM %s WHERE name= $1", rolesTable)
+	err := r.db.Get(&role, query, name)
+	return role, err
+}
+
 func (r *RolePostgres) Update(id int, role models.UpdateRoleInput) error {
 	query := fmt.Sprintf("UPDATE %s SET name=$1 WHERE id=$2", rolesTable)
 	_, err := r.db.Exec(query, role.Name, id)
