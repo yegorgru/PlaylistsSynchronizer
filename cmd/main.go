@@ -2,7 +2,9 @@ package main
 
 import (
 	"PlaylistsSynchronizer"
+	"PlaylistsSynchronizer/pkg/handlers"
 	"PlaylistsSynchronizer/pkg/repositories"
+	"PlaylistsSynchronizer/pkg/services"
 	"context"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -31,8 +33,8 @@ func main() {
 		log.Fatalf("failed to initialize db: %s", err.Error())
 	}
 	repos := repositories.NewRepository(db)
-	services := service.NewService(repos)
-	handler := handlers.NewHandler(services)
+	service := services.NewService(repos)
+	handler := handlers.NewHandler(service)
 
 	srv := new(PlaylistsSynchronizer.Server)
 	go func() {
