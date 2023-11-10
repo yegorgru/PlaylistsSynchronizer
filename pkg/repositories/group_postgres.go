@@ -14,26 +14,33 @@ func NewGroupPostgres(db *sqlx.DB) *GroupPostgres {
 	return &GroupPostgres{db: db}
 }
 
-func (r *GroupPostgres) Create(userID, roleID int, group models.Group) (int, error) {
+func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroup) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err
 	}
-	var id int
-	createGroup := fmt.Sprintf("INSERT INTO %s (name, description) values ($1, $2) RETURNING id", groupsTable)
-	row1 := r.db.QueryRow(createGroup, group.Name, group.Description)
-	if err := row1.Scan(&id); err != nil {
+	var ID int
+	createGroup := fmt.Sprintf("INSERT INTO %s (name, description) values ($1, $2) RETURNING ID", groupsTable)
+	row1 := r.db.QueryRow(createGroup, group.GroupName, group.Description)
+	if err := row1.Scan(&ID); err != nil {
 		tx.Rollback()
 		return 0, err
 	}
-	var userGroupId int
-	userGroup := fmt.Sprintf("INSERT INTO %s (userId, id, roleID) values ($1, $2, $3) RETURNING id", userGroupTable)
-	row3 := r.db.QueryRow(userGroup, userID, id, roleID)
-	if err := row3.Scan(&userGroupId); err != nil {
+	var userGroupID int
+	userGroup := fmt.Sprintf("INSERT INTO %s (userId, ID, roleID) values ($1, $2, $3) RETURNING ID", userGroupTable)
+	row2 := r.db.QueryRow(userGroup, userID, ID, roleID)
+	if err := row2.Scan(&userGroupID); err != nil {
 		tx.Rollback()
 		return 0, err
 	}
-	return id, tx.Commit()
+	var playListID int
+	playList := fmt.Sprintf("INSERT INTO %s (name, groupID) values ($1, $2) RETURNING ID", playlistsTable)
+	row3 := r.db.QueryRow(playList, group.PlayListName, ID)
+	if err := row3.Scan(&playListID); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
+	return ID, tx.Commit()
 }
 
 func (r *GroupPostgres) GetAll() ([]models.Group, error) {
