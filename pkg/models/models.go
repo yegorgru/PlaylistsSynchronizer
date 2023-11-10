@@ -1,5 +1,7 @@
 package models
 
+import "errors"
+
 type User struct {
 	Id       int    `json:"-" db:"id"`
 	Username string `json:"username" db:"username" binding:"required"`
@@ -48,4 +50,32 @@ type UpdateRoleInput struct {
 type UpdatePlayListInput struct {
 	Name    *string `json:"name"`
 	GroupID *int    `json:"groupID"`
+}
+
+func (i UpdateGroupInput) Validate() error {
+	if i.Name == nil && i.Description == nil {
+		return errors.New("update structure has no value")
+	}
+	return nil
+}
+
+func (i UpdateUserGroupInput) Validate() error {
+	if i.UserID == nil && i.GroupID == nil {
+		return errors.New("update structure has no value")
+	}
+	return nil
+}
+
+func (i UpdateRoleInput) Validate() error {
+	if i.Name == nil {
+		return errors.New("update structure has no value")
+	}
+	return nil
+}
+
+func (i UpdatePlayListInput) Validate() error {
+	if i.Name == nil && i.GroupID == nil {
+		return errors.New("update structure has no value")
+	}
+	return nil
 }

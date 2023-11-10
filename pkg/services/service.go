@@ -1,17 +1,18 @@
-package repositories
+package services
 
 import (
 	"PlaylistsSynchronizer/pkg/models"
-	"github.com/jmoiron/sqlx"
+	"PlaylistsSynchronizer/pkg/repositories"
 )
 
 type Authorization interface {
 	CreateUser(user models.User) (int, error)
-	GetUser(username, password string) (models.User, error)
+	GenerateToken(username, password string) (string, error)
+	ParseToken(token string) (int, error)
 }
 
 type Group interface {
-	Create(userID, roleID int, group models.Group) (int, error)
+	Create(userID int, group models.Group) (int, error)
 	GetAll() ([]models.Group, error)
 	GetById(id int) (models.Group, error)
 	Update(id int, group models.UpdateGroupInput) error
@@ -30,7 +31,6 @@ type Role interface {
 	Create(group models.Role) (int, error)
 	GetAll() ([]models.Role, error)
 	GetById(id int) (models.Role, error)
-	GetByName(name string) (models.Role, error)
 	Update(id int, group models.UpdateRoleInput) error
 	Delete(id int) error
 }
@@ -43,7 +43,7 @@ type PlayList interface {
 	Delete(id int) error
 }
 
-type Repository struct {
+type Service struct {
 	Authorization
 	Group
 	UserGroup
@@ -51,12 +51,12 @@ type Repository struct {
 	PlayList
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
-	return &Repository{
-		Authorization: NewAuthPostgres(db),
-		Group:         NewGroupPostgres(db),
-		UserGroup:     NewUserGroupPostgres(db),
-		Role:          NewRolePostgres(db),
-		PlayList:      NewPlayListPostgres(db),
+func NewService(repos *repositories.Repository) *Service {
+	return &Service{
+		Authorization: NewAuthService(repos.Authorization),
+		Group:         NewGroupService(repos.Group, repos.Role),
+		UserGroup:     NewUserGroupService(repos.UserGroup),
+		Role:          NewRoleService(repos.Role),
+		PlayList:      NewPlayListService(repos.PlayList),
 	}
 }
