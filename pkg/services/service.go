@@ -12,7 +12,7 @@ type Authorization interface {
 }
 
 type Group interface {
-	Create(userID int, group models.Group) (int, error)
+	Create(userID int, group models.UserCreateGroup) (int, error)
 	GetAll() ([]models.Group, error)
 	GetById(id int) (models.Group, error)
 	Update(id int, group models.UpdateGroupInput) error
@@ -28,15 +28,15 @@ type UserGroup interface {
 }
 
 type Role interface {
-	Create(group models.Role) (int, error)
+	Create(role models.Role) (int, error)
 	GetAll() ([]models.Role, error)
 	GetById(id int) (models.Role, error)
-	Update(id int, group models.UpdateRoleInput) error
+	Update(id int, role models.UpdateRoleInput) error
 	Delete(id int) error
 }
 
 type PlayList interface {
-	Create(group models.PlayList) (int, error)
+	Create(playList models.PlayList) (int, error)
 	GetAll() ([]models.PlayList, error)
 	GetById(id int) (models.PlayList, error)
 	Update(id int, group models.UpdatePlayListInput) error
@@ -55,7 +55,7 @@ func NewService(repos *repositories.Repository) *Service {
 	return &Service{
 		Authorization: NewAuthService(repos.Authorization),
 		Group:         NewGroupService(repos.Group, repos.Role),
-		UserGroup:     NewUserGroupService(repos.UserGroup),
+		UserGroup:     NewUserGroupService(repos.UserGroup, repos.Role),
 		Role:          NewRoleService(repos.Role),
 		PlayList:      NewPlayListService(repos.PlayList),
 	}

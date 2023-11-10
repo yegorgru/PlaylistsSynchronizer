@@ -10,27 +10,34 @@ type User struct {
 }
 
 type Group struct {
-	ID          int    `json:"-" db:"id"`
+	ID          int    `json:"id" db:"id"`
 	Name        string `json:"name" db:"name" binding:"required"`
 	Description string `json:"description" db:"description" binding:"required"`
 }
 
 type Role struct {
-	ID   int    `json:"-" db:"id"`
+	ID   int    `json:"id" db:"id"`
 	Name string `json:"name" db:"name" binding:"required"`
 }
 
 type UserGroup struct {
-	ID      int `json:"-" db:"id"`
-	UserID  int `json:"userID" db:"userID" binding:"required"`
-	GroupID int `json:"groupID" db:"groupID" binding:"required"`
-	RoleID  int `json:"roleID" db:"roleID" binding:"required"`
+	ID      int `json:"id" db:"id"`
+	UserID  int `json:"userID" db:"userid"`
+	GroupID int `json:"groupID" db:"groupid"`
+	RoleID  int `json:"roleID" db:"roleid"`
 }
 
 type PlayList struct {
-	ID      int    `json:"-" db:"id"`
+	ID      int    `json:"id" db:"id"`
 	Name    string `json:"name" db:"name" binding:"required"`
-	GroupID int    `json:"groupID" db:"groupID" binding:"required"`
+	GroupID int    `json:"groupID" db:"groupid" binding:"required"`
+}
+
+type UserCreateGroup struct {
+	ID           int    `json:"-"`
+	GroupName    string `json:"groupName"`
+	PlayListName string `json:"playListName"`
+	Description  string `json:"description"`
 }
 
 type UpdateGroupInput struct {
@@ -41,6 +48,7 @@ type UpdateGroupInput struct {
 type UpdateUserGroupInput struct {
 	UserID  *int `json:"userID"`
 	GroupID *int `json:"groupID"`
+	RoleID  *int `json:"roleID"`
 }
 
 type UpdateRoleInput struct {

@@ -52,7 +52,7 @@ func (r *RolePostgres) Update(id int, role models.UpdateRoleInput) error {
 }
 
 func (r *RolePostgres) Delete(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id= $1", rolesTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", rolesTable)
 	_, err := r.db.Exec(query, id)
 	return err
 }

@@ -17,7 +17,7 @@ func NewGroupService(repoGroup repositories.Group, repoRole repositories.Role) *
 	}
 }
 
-func (s *GroupService) Create(userID int, group models.Group) (int, error) {
+func (s *GroupService) Create(userID int, group models.UserCreateGroup) (int, error) {
 	role, err := s.repoRole.GetByName("ADMIN")
 	if err != nil {
 		return 0, err
