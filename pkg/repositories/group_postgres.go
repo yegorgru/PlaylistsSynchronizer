@@ -14,28 +14,28 @@ func NewGroupPostgres(db *sqlx.DB) *GroupPostgres {
 	return &GroupPostgres{db: db}
 }
 
-func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroup) (int, error) {
+func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroupInput) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err
 	}
 	var ID int
 	createGroup := fmt.Sprintf("INSERT INTO %s (name, description) values ($1, $2) RETURNING ID", groupsTable)
-	row1 := r.db.QueryRow(createGroup, group.GroupName, group.Description)
+	row1 := r.db.QueryRow(createGroup, group.GroupName, group.GroupDescription)
 	if err := row1.Scan(&ID); err != nil {
 		tx.Rollback()
 		return 0, err
 	}
 	var userGroupID int
-	userGroup := fmt.Sprintf("INSERT INTO %s (userId, ID, roleID) values ($1, $2, $3) RETURNING ID", userGroupTable)
-	row2 := r.db.QueryRow(userGroup, userID, ID, roleID)
+	userGroup := fmt.Sprintf("INSERT INTO %s (userId, groupID, roleID, playListID) values ($1, $2, $3, $4) RETURNING ID", userGroupTable)
+	row2 := r.db.QueryRow(userGroup, userID, ID, roleID, group.PlayListID)
 	if err := row2.Scan(&userGroupID); err != nil {
 		tx.Rollback()
 		return 0, err
 	}
 	var playListID int
-	playList := fmt.Sprintf("INSERT INTO %s (name, groupID) values ($1, $2) RETURNING ID", playlistsTable)
-	row3 := r.db.QueryRow(playList, group.PlayListName, ID)
+	playList := fmt.Sprintf("INSERT INTO %s (name, description, groupID) values ($1, $2, $3) RETURNING ID", playlistsTable)
+	row3 := r.db.QueryRow(playList, group.PlayListName, group.PlayListDescription, ID)
 	if err := row3.Scan(&playListID); err != nil {
 		tx.Rollback()
 		return 0, err

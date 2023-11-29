@@ -2,6 +2,7 @@ package main
 
 import (
 	"PlaylistsSynchronizer"
+	"PlaylistsSynchronizer/configs"
 	"PlaylistsSynchronizer/pkg/handlers"
 	"PlaylistsSynchronizer/pkg/repositories"
 	"PlaylistsSynchronizer/pkg/services"
@@ -21,6 +22,9 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("error loading env variables: %s", err.Error())
 	}
+
+	configs.LoadAuthConfig()
+
 	db, err := repositories.NewPostgresDB(repositories.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),

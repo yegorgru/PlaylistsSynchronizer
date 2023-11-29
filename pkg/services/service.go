@@ -3,16 +3,21 @@ package services
 import (
 	"PlaylistsSynchronizer/pkg/models"
 	"PlaylistsSynchronizer/pkg/repositories"
+	"github.com/gin-gonic/gin"
 )
 
 type Authorization interface {
 	CreateUser(user models.User) (int, error)
-	GenerateToken(username, password string) (string, error)
-	ParseToken(token string) (int, error)
+	CreateUserSpotify(spotifyUri string, token models.ApiToken, user models.User) (int, error)
+	CreateUserYouTubeMusic(token string, user models.User) (int, error)
+	GetUser(email string) (*models.User, error)
+	GenerateToken(email string) (string, error)
+	ParseToken(token string) (*models.UserClaims, error)
+	RefreshToken(userId int) (string, error)
 }
 
 type Group interface {
-	Create(userID int, group models.UserCreateGroup) (int, error)
+	Create(c *gin.Context, userID int, group models.UserCreateGroupInput) (int, error)
 	GetAll() ([]models.Group, error)
 	GetById(id int) (models.Group, error)
 	Update(id int, group models.UpdateGroupInput) error
@@ -20,7 +25,7 @@ type Group interface {
 }
 
 type UserGroup interface {
-	Create(userGroup models.UserGroup) (int, error)
+	Create(c *gin.Context, platform string, userGroup models.UserGroup) (int, error)
 	GetAll() ([]models.UserGroup, error)
 	GetById(id int) (models.UserGroup, error)
 	Update(id int, group models.UpdateUserGroupInput) error
@@ -43,20 +48,38 @@ type PlayList interface {
 	Delete(id int) error
 }
 
+type Track interface {
+	Add(input models.AddTrackInput) (int, error)
+	DeleteFromPlayList(trackID string) error
+}
+
+type Token interface {
+	Create(token models.Token) (int, error)
+	GetByToken(token string) (*models.Token, error)
+	Update(token string) error
+	UpdateYouTubeAccessToken(token string, userID int) error
+	RevokeAllUserTokens(userID int) error
+}
+
 type Service struct {
 	Authorization
 	Group
 	UserGroup
 	Role
 	PlayList
+	Track
+	Token
 }
 
 func NewService(repos *repositories.Repository) *Service {
 	return &Service{
 		Authorization: NewAuthService(repos.Authorization),
-		Group:         NewGroupService(repos.Group, repos.Role),
-		UserGroup:     NewUserGroupService(repos.UserGroup, repos.Role),
-		Role:          NewRoleService(repos.Role),
-		PlayList:      NewPlayListService(repos.PlayList),
+		Group:         NewGroupService(repos.Authorization, repos.Group, repos.Role, repos.Token),
+		UserGroup: NewUserGroupService(repos.Authorization, repos.UserGroup, repos.PlayList, repos.Role, repos.Track,
+			repos.Token),
+		Role:     NewRoleService(repos.Role),
+		PlayList: NewPlayListService(repos.PlayList),
+		Track:    NewTrackService(repos.Track, repos.UserGroup, repos.Token, repos.PlayList),
+		Token:    NewTokenService(repos.Token),
 	}
 }

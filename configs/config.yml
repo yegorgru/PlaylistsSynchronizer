@@ -1,4 +1,5 @@
 port: "8080"
+domain: "http://localhost:"
 db:
   username: "postgres"
   password: "0961533469Vi"
