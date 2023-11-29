@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"PlaylistsSynchronizer/pkg/models"
+	"bytes"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -10,18 +12,32 @@ import (
 func (h *Handler) createGroup(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
+		models.NewErrorResponse(c, http.StatusUnauthorized, err.Error())
 		return
 	}
-
-	var input models.UserCreateGroup
-	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	id, err := h.services.Group.Create(userID, input)
+	platform, err := getUserPlatform(c)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	body, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	// Check if there are any additional fields in the JSON body
+	if err := h.validateJSONTags(body, models.UserCreateGroupInput{}); err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var input models.UserCreateGroupInput
+	if err := c.BindJSON(&input); err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		return
+	}
+	input.Platform = platform
+	id, err := h.services.Group.Create(c, userID, input)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -30,25 +46,19 @@ func (h *Handler) createGroup(c *gin.Context) {
 	})
 }
 
-type getAllGroupResponse struct {
-	Data []models.Group `json:data`
-}
-
 func (h *Handler) getAllGroups(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
 		return
 	}
 
-	battles, err := h.services.Group.GetAll()
+	groups, err := h.services.Group.GetAll()
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, getAllGroupResponse{
-		Data: battles,
-	})
+	c.JSON(http.StatusOK, groups)
 }
 
 func (h *Handler) getGroupById(c *gin.Context) {
@@ -59,16 +69,16 @@ func (h *Handler) getGroupById(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
-	battle, err := h.services.Group.GetById(id)
+	group, err := h.services.Group.GetById(id)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, battle)
+	c.JSON(http.StatusOK, group)
 }
 
 func (h *Handler) updateGroup(c *gin.Context) {
@@ -78,21 +88,30 @@ func (h *Handler) updateGroup(c *gin.Context) {
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
+
+	body, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	// Check if there are any additional fields in the JSON body
+	if err := h.validateJSONTags(body, models.UpdateGroupInput{}); err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	var input models.UpdateGroupInput
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
 	if err := h.services.Group.Update(id, input); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, statusResponse{"ok"})
+	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
 }
 
 func (h *Handler) deleteGroup(c *gin.Context) {
@@ -102,13 +121,13 @@ func (h *Handler) deleteGroup(c *gin.Context) {
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
 
 	if err := h.services.Group.Delete(id); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, statusResponse{"ok"})
+	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
 }

@@ -16,8 +16,8 @@ func NewUserGroupPostgres(db *sqlx.DB) *UserGroupPostgres {
 
 func (r *UserGroupPostgres) Create(userGroup models.UserGroup) (int, error) {
 	var id int
-	query := fmt.Sprintf("INSERT INTO %s (userid, groupid, roleid) values ($1, $2, $3) RETURNING id", userGroupTable)
-	row := r.db.QueryRow(query, userGroup.UserID, userGroup.GroupID, userGroup.RoleID)
+	query := fmt.Sprintf("INSERT INTO %s (userid, groupid, roleid, playlistid) values ($1, $2, $3, $4) RETURNING id", userGroupTable)
+	row := r.db.QueryRow(query, userGroup.UserID, userGroup.GroupID, userGroup.RoleID, userGroup.PlayListID)
 	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
@@ -36,6 +36,31 @@ func (r *UserGroupPostgres) GetById(id int) (models.UserGroup, error) {
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id=$1", userGroupTable)
 	err := r.db.Get(&group, query, id)
 	return group, err
+}
+
+func (r *UserGroupPostgres) GetByGroupId(id int) ([]models.UserGroup, error) {
+	var group []models.UserGroup
+	query := fmt.Sprintf("SELECT * FROM %s WHERE groupID=$1", userGroupTable)
+	err := r.db.Select(&group, query, id)
+	return group, err
+}
+
+func (r *UserGroupPostgres) GetByGroupIdSpotifyUser(id int) ([]models.UserGroupToken, error) {
+	var users []models.UserGroupToken
+	query := fmt.Sprintf("SELECT ug.id, ug.userid, ug.groupid, ug.roleid, us.accessToken, us.spotifyUri, "+
+		"ug.playlistid FROM %s ug JOIN %s u ON u.id = ug.userid AND  u.platform = 'Spotify' "+
+		"JOIN %s us ON u.id = us.userid WHERE ug.groupID=$1", userGroupTable, usersTable, userSpotifyTable)
+	err := r.db.Select(&users, query, id)
+	return users, err
+}
+
+func (r *UserGroupPostgres) GetByGroupIdYouTubeMusicUser(id int) ([]models.UserGroupToken, error) {
+	var users []models.UserGroupToken
+	query := fmt.Sprintf("SELECT ug.id, ug.userid, ug.groupid, ug.roleid, ut.accessToken, "+
+		"ug.playlistid FROM %s ug JOIN %s u ON u.id = ug.userid AND  u.platform='YouTubeMusic' "+
+		"JOIN %s ut ON u.id = ut.userid WHERE groupID=$1", userGroupTable, usersTable, userYouTubeMusicTable)
+	err := r.db.Select(&users, query, id)
+	return users, err
 }
 
 func (r *UserGroupPostgres) Update(id int, group models.UpdateUserGroupInput) error {

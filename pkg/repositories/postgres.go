@@ -7,11 +7,16 @@ import (
 )
 
 const (
-	usersTable     = "users"
-	groupsTable    = "groups"
-	userGroupTable = "user_group"
-	rolesTable     = "roles"
-	playlistsTable = "playlists"
+	usersTable            = "users"
+	groupsTable           = "groups"
+	userGroupTable        = "user_group"
+	userSpotifyTable      = "users_spotify"
+	userYouTubeMusicTable = "user_youtubemusic"
+	rolesTable            = "roles"
+	playlistsTable        = "playlists"
+	tracksTable           = "tracks"
+	playlistTrackTable    = "playlist_track"
+	tokensTable           = "tokens"
 )
 
 type Config struct {

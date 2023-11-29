@@ -10,7 +10,9 @@ type Handler struct {
 }
 
 func NewHandler(services *services.Service) *Handler {
-	return &Handler{services: services}
+	return &Handler{
+		services: services,
+	}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -20,6 +22,13 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		auth.POST("/sign-up", h.signUp)
 		auth.POST("/sign-in", h.signIn)
+		auth.POST("/logout", h.logout)
+		auth.GET("/spotify-login", h.spotifyLogin)
+		auth.GET("/spotify-callback", h.spotifyCallBack)
+		auth.GET("/youtube-music-login", h.youTubeMusicLogin)
+		auth.GET("/youtube-music-callback", h.youTubeMusicCallBack)
+		auth.GET("/apple-music-login", h.appleMusicLogin)
+		auth.GET("/apple-music-callback", h.appleMusicCallBack)
 	}
 
 	api := router.Group("/api", h.userIdentity)
@@ -50,12 +59,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		}
 		playLists := api.Group("/playlists")
 		{
-			playLists.POST("/", h.createPlayList)
 			playLists.GET("/", h.getAllPlayList)
 			playLists.GET("/:id", h.getPlayListById)
 			playLists.PUT("/:id", h.updatePlayList)
 			playLists.DELETE("/:id", h.deletePlayList)
 		}
+		tracks := api.Group("/tracks")
+		{
+			tracks.POST("/", h.addTrack)
+		}
 	}
+	router.POST("/refresh-token", h.refreshToken)
 	return router
 }
