@@ -16,8 +16,8 @@ func NewPlayListPostgres(db *sqlx.DB) *PlayListPostgres {
 
 func (r *PlayListPostgres) Create(playlist models.PlayList) (int, error) {
 	var id int
-	query := fmt.Sprintf("INSERT INTO %s (name, groupID) values ($1, $2) RETURNING id", playlistsTable)
-	row := r.db.QueryRow(query, playlist.Name, playlist.GroupID)
+	query := fmt.Sprintf("INSERT INTO %s (name, description, groupID) values ($1, $2, $3) RETURNING id", playlistsTable)
+	row := r.db.QueryRow(query, playlist.Name, playlist.Description, playlist.GroupID)
 	if err := row.Scan(&id); err != nil {
 		return 0, err
 	}
@@ -38,9 +38,16 @@ func (r *PlayListPostgres) GetById(id int) (models.PlayList, error) {
 	return playList, err
 }
 
-func (r *PlayListPostgres) Update(id int, role models.UpdatePlayListInput) error {
-	query := fmt.Sprintf("UPDATE %s SET name=$1, groupID=$2 WHERE id=$3", playlistsTable)
-	_, err := r.db.Exec(query, role.Name, role.GroupID, id)
+func (r *PlayListPostgres) GetByGroupId(id int) (models.PlayList, error) {
+	var playList models.PlayList
+	query := fmt.Sprintf("SELECT * FROM %s WHERE groupID=$1", playlistsTable)
+	err := r.db.Get(&playList, query, id)
+	return playList, err
+}
+
+func (r *PlayListPostgres) Update(id int, playList models.UpdatePlayListInput) error {
+	query := fmt.Sprintf("UPDATE %s SET name=$1, description=$2, groupID=$3 WHERE id=$4", playlistsTable)
+	_, err := r.db.Exec(query, playList.Name, playList.Description, playList.GroupID, id)
 	return err
 }
 

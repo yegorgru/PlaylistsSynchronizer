@@ -1,28 +1,67 @@
 package services
 
 import (
+	"PlaylistsSynchronizer/pkg/api_services"
 	"PlaylistsSynchronizer/pkg/models"
 	"PlaylistsSynchronizer/pkg/repositories"
+	"github.com/gin-gonic/gin"
 )
 
 type GroupService struct {
-	repoGroup repositories.Group
-	repoRole  repositories.Role
+	reposAuth  repositories.Authorization
+	repoGroup  repositories.Group
+	repoRole   repositories.Role
+	repoToken  repositories.Token
+	apiService api_services.ApiService
 }
 
-func NewGroupService(repoGroup repositories.Group, repoRole repositories.Role) *GroupService {
+func NewGroupService(reposAuth repositories.Authorization, repoGroup repositories.Group, repoRole repositories.Role,
+	repoToken repositories.Token) *GroupService {
 	return &GroupService{
-		repoGroup: repoGroup,
-		repoRole:  repoRole,
+		reposAuth:  reposAuth,
+		repoGroup:  repoGroup,
+		repoRole:   repoRole,
+		repoToken:  repoToken,
+		apiService: *api_services.NewApiService(repoToken),
 	}
 }
 
-func (s *GroupService) Create(userID int, group models.UserCreateGroup) (int, error) {
+func (s *GroupService) Create(c *gin.Context, userID int, group models.UserCreateGroupInput) (int, error) {
 	role, err := s.repoRole.GetByName("ADMIN")
 	if err != nil {
 		return 0, err
 	}
-	return s.repoGroup.Create(userID, role.ID, group)
+	var playListID string
+	playList := models.PlayList{Name: group.PlayListName, Description: group.PlayListDescription}
+	switch group.Platform {
+	case models.Spotify:
+		spotify := s.apiService.GetSpotifyServiceApi()
+		userSpotify, err := s.reposAuth.GetUserSpotifyByID(userID)
+		if err != nil {
+			return 0, err
+		}
+		spotifyData := models.SpotifyData{Token: userSpotify.AccessToken, SpotifyUri: userSpotify.SpotifyUri}
+		playListID, err = spotify.CreatePlayList(spotifyData, playList)
+		if err != nil {
+			return 0, err
+		}
+	case models.YouTubeMusic:
+		youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
+		token, err := s.repoToken.GetYouTubeMusicToken(userID)
+		if err != nil {
+			return 0, err
+		}
+		playListID, err = youTubeMusic.CreatePlayList(token.AccessToken, playList)
+		if err != nil {
+			return 0, err
+		}
+	}
+	group.PlayListID = playListID
+	id, err := s.repoGroup.Create(userID, role.ID, group)
+	if err != nil {
+		return 0, err
+	}
+	return id, err
 }
 
 func (s *GroupService) GetAll() ([]models.Group, error) {

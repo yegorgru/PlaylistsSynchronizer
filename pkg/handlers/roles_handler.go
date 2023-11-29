@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"PlaylistsSynchronizer/pkg/models"
+	"bytes"
 	"github.com/gin-gonic/gin"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -15,13 +17,13 @@ func (h *Handler) createRole(c *gin.Context) {
 
 	var input models.Role
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id, err := h.services.Role.Create(input)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -42,7 +44,7 @@ func (h *Handler) getAllRole(c *gin.Context) {
 
 	roles, err := h.services.Role.GetAll()
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -59,12 +61,12 @@ func (h *Handler) getRoleById(c *gin.Context) {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
 	role, err := h.services.Role.GetById(id)
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -78,21 +80,30 @@ func (h *Handler) updateRole(c *gin.Context) {
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
+
+	body, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+	// Check if there are any additional fields in the JSON body
+	if err := h.validateJSONTags(body, models.UpdateRoleInput{}); err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	var input models.UpdateRoleInput
 
 	if err := c.BindJSON(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
 		return
 	}
 
 	if err := h.services.Role.Update(id, input); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, statusResponse{"ok"})
+	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
 }
 
 func (h *Handler) deleteRole(c *gin.Context) {
@@ -102,13 +113,13 @@ func (h *Handler) deleteRole(c *gin.Context) {
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
 
 	if err := h.services.Role.Delete(id); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, statusResponse{"ok"})
+	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
 }
