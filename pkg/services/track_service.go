@@ -26,56 +26,129 @@ func NewTrackService(repoTrack repositories.Track, repoGroup repositories.UserGr
 	}
 }
 
+func (s *TrackService) GetByPlayListTrackID(playListID, trackID int) ([]models.PlayListTrack, error) {
+	return s.repoTrack.GetByPlayListTrackID(playListID, trackID)
+}
+
 func (s *TrackService) Add(input models.AddTrackInput) (int, error) {
-	playListID, err := s.repoPlaylist.GetByGroupId(input.GroupID)
-	if err != nil {
-		return 0, nil
-	}
-	input.PlayListID = playListID.ID
-	isTrackPlayListExist, err := s.repoTrack.GetByPlayListIDAndTrackApiID(playListID.ID, models.ApiTrackID{SpotifyUri: input.SpotifyUri,
-		YouTubeMusic: input.YouTubeMusicID})
-	if isTrackPlayListExist == nil {
-		err = s.addSpotify(input)
-		if err != nil {
-			return 0, err
-		}
-		err = s.addYouTubeMusic(input)
-		if err != nil {
-			return 0, err
-		}
-	} else {
-		return 0, errors.New("track already exist in this playlist")
-	}
 	isTrackExist, err := s.repoTrack.GetByTrackApiID(models.ApiTrackID{SpotifyUri: input.SpotifyUri,
 		YouTubeMusic: input.YouTubeMusicID})
 	if err != nil {
 		return 0, err
 	}
+	var track models.CreateTrack
+	track = models.CreateTrack{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID}
 	if isTrackExist == nil {
-		track := models.Track{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID}
-		id, err := s.repoTrack.Create(input.PlayListID, track)
+		id, err := s.repoTrack.Create(track)
 		if err != nil {
-			return 0, nil
+			return 0, err
 		}
-		isTrackExist.ID = id
+		track.ID = id
+	} else {
+		track.ID = isTrackExist.ID
 	}
-	return isTrackExist.ID, nil
+	isTrackPlayListExist, err := s.repoTrack.GetByPlayListIDAndTrackApiID(
+		input.PlayListID, models.ApiTrackID{SpotifyUri: input.SpotifyUri,
+			YouTubeMusic: input.YouTubeMusicID})
+	if err != nil {
+		return 0, err
+	}
+	if isTrackPlayListExist == nil {
+		_, err = s.repoTrack.AddSpotifyTrackPlayList(input.PlayListID, track)
+		if err != nil {
+			return 0, err
+		}
+		id, err := s.addSpotify(track, input.GroupID)
+		if err != nil {
+			return 0, err
+		}
+		_, err = s.addYouTubeMusic(track, input.PlayListID, input.GroupID)
+		if err != nil {
+			return 0, err
+		}
+		return id, nil
+	} else {
+		return 0, errors.New("track already exist in playlist")
+	}
 }
 
-func (s *TrackService) DeleteFromPlayList(trackID string) error {
-	//TODO implement delete music method
+func (s *TrackService) addSpotify(track models.CreateTrack, groupID int) (int, error) {
+	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
+	if err != nil {
+		return 0, err
+	}
+	for _, value := range usersSpotify {
+		spotify := s.apiService.GetSpotifyServiceApi()
+		err := spotify.AddTrack(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri}, value.PlayListID,
+			[]models.Track{{SpotifyUri: track.SpotifyUri,
+				YouTubeMusicID: track.YouTubeMusicID}})
+		if err != nil {
+			return 0, err
+		}
+	}
+	return track.ID, nil
+}
+
+func (s *TrackService) addYouTubeMusic(track models.CreateTrack, playListID, groupID int) (int, error) {
+	usersYouTubeMusic, err := s.repoGroup.GetByGroupIdYouTubeMusicUser(groupID)
+	if err != nil {
+		return 0, err
+	}
+	var tracksID string
+	for _, value := range usersYouTubeMusic {
+		youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
+		tracksID, err = youTubeMusic.AddTrack(value.Token, value.PlayListID, models.Track{SpotifyUri: track.SpotifyUri,
+			YouTubeMusicID: track.YouTubeMusicID})
+		if err != nil {
+			return 0, err
+		}
+		newTrack := models.CreateTrack{SpotifyUri: track.SpotifyUri, YouTubeMusicID: track.YouTubeMusicID,
+			UserID: value.UserID, PlayListYouTubeMusicID: tracksID, ID: track.ID}
+		_, err := s.repoTrack.AddYouTubeMusicTrackPlayList(playListID, newTrack)
+		if err != nil {
+			return 0, err
+		}
+	}
+	return track.ID, nil
+}
+
+func (s *TrackService) DeleteFromPlayList(groupID, playListID, trackID int) error {
+	track, err := s.repoTrack.GetByID(trackID)
+	if err != nil {
+		return err
+	}
+	err = s.deleteSpotify(groupID, *track)
+	if err != nil {
+		return err
+	}
+	playListTracks, err := s.repoTrack.GetByPlayListTrackID(playListID, trackID)
+	for _, value := range playListTracks {
+		err = s.deleteYouTubeMusic(value.Token, value.PlayListYouTubeMusicID)
+		if err != nil {
+			return err
+		}
+		err = s.repoTrack.DeleteFromYouTubeMusicPlayList(value.UserID, playListID, trackID)
+		if err != nil {
+			return err
+		}
+	}
+	err = s.repoTrack.DeleteFromPlayList(playListID, trackID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (s *TrackService) addSpotify(input models.AddTrackInput) error {
-	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(input.GroupID)
+func (s *TrackService) deleteSpotify(groupID int, track models.Track) error {
+	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
+
 	if err != nil {
 		return err
 	}
 	for _, value := range usersSpotify {
 		spotify := s.apiService.GetSpotifyServiceApi()
-		err := spotify.AddTrack(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri}, value.PlayListID, []models.Track{{SpotifyUri: input.SpotifyUri,
-			YouTubeMusicID: input.YouTubeMusicID}})
+		err := spotify.DeleteTrack(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri},
+			value.PlayListID, []models.Track{track})
 		if err != nil {
 			return err
 		}
@@ -83,18 +156,11 @@ func (s *TrackService) addSpotify(input models.AddTrackInput) error {
 	return nil
 }
 
-func (s *TrackService) addYouTubeMusic(input models.AddTrackInput) error {
-	usersYouTubeMusic, err := s.repoGroup.GetByGroupIdYouTubeMusicUser(input.GroupID)
+func (s *TrackService) deleteYouTubeMusic(token, trackID string) error {
+	youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
+	err := youTubeMusic.DeleteTrack(token, trackID)
 	if err != nil {
 		return err
-	}
-	for _, value := range usersYouTubeMusic {
-		youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
-		err := youTubeMusic.AddTrack(value.Token, value.PlayListID, []models.Track{{SpotifyUri: input.SpotifyUri,
-			YouTubeMusicID: input.YouTubeMusicID}})
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }

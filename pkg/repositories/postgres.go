@@ -17,6 +17,7 @@ const (
 	tracksTable           = "tracks"
 	playlistTrackTable    = "playlist_track"
 	tokensTable           = "tokens"
+	youtubeMusicTracks    = "youtube_music_tracks"
 )
 
 type Config struct {

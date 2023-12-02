@@ -23,7 +23,7 @@ func (s *RoleService) GetAll() ([]models.Role, error) {
 	return s.repo.GetAll()
 }
 
-func (s *RoleService) GetById(id int) (models.Role, error) {
+func (s *RoleService) GetById(id int) (*models.Role, error) {
 	return s.repo.GetById(id)
 }
 

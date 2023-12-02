@@ -20,8 +20,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	auth := router.Group("/auth")
 	{
-		auth.POST("/sign-up", h.signUp)
-		auth.POST("/sign-in", h.signIn)
 		auth.POST("/logout", h.logout)
 		auth.GET("/spotify-login", h.spotifyLogin)
 		auth.GET("/spotify-callback", h.spotifyCallBack)
@@ -40,14 +38,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			groups.GET("/:id", h.getGroupById)
 			groups.PUT("/:id", h.updateGroup)
 			groups.DELETE("/:id", h.deleteGroup)
+			groups.POST("/:id/leave", h.leaveGroup)
+			groups.POST("/:id/users", h.createUserGroup)
+			groups.GET("/:id/users", h.getAllUserGroups)
+			groups.GET("/:id/users/:userID", h.getUserGroupByUserId)
+			groups.PUT("/:id/users/:userID", h.updateUserGroup)
+			groups.DELETE("/:id/users/:userID", h.deleteUserGroup)
 		}
-		userGroups := api.Group("/user-groups")
+		users := api.Group("/users")
 		{
-			userGroups.POST("/", h.createUserGroup)
-			userGroups.GET("/", h.getAllUserGroups)
-			userGroups.GET("/:id", h.getUserGroupById)
-			userGroups.PUT("/:id", h.updateUserGroup)
-			userGroups.DELETE("/:id", h.deleteUserGroup)
+			users.GET("/:id", h.getUserByID)
 		}
 		roles := api.Group("/roles")
 		{
@@ -62,11 +62,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			playLists.GET("/", h.getAllPlayList)
 			playLists.GET("/:id", h.getPlayListById)
 			playLists.PUT("/:id", h.updatePlayList)
-			playLists.DELETE("/:id", h.deletePlayList)
-		}
-		tracks := api.Group("/tracks")
-		{
-			tracks.POST("/", h.addTrack)
+			playLists.POST("/:id/tracks", h.addTrack)
+			playLists.DELETE("/:id/tracks/:trackID", h.deleteTrack)
 		}
 	}
 	router.POST("/refresh-token", h.refreshToken)

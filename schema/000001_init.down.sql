@@ -1,8 +1,10 @@
 DROP TABLE playlist_track;
 
-DROP TABLE tracks;
+DROP TABLE youtube_music_tracks;
 
 DROP TABLE playlists;
+
+DROP TABLE tracks;
 
 DROP TABLE user_group;
 

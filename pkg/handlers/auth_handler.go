@@ -12,47 +12,6 @@ import (
 	"net/http"
 )
 
-func (h *Handler) signUp(c *gin.Context) {
-	var input models.User
-	if err := c.BindJSON(&input); err != nil {
-		models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
-		return
-	}
-
-	id, err := h.services.Authorization.CreateUser(input)
-	if err != nil {
-		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
-	})
-}
-
-type signInInput struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-func (h *Handler) signIn(c *gin.Context) {
-	var input signInInput
-	if err := c.BindJSON(&input); err != nil {
-		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	token, err := h.services.Authorization.GenerateToken(input.Username)
-	if err != nil {
-		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"token": token,
-	})
-}
-
 func (h *Handler) spotifyLogin(c *gin.Context) {
 	oauthState := utils.GenerateStateOauthCookie(c.Writer)
 	u := configs.AppConfig.SpotifyLoginConfig.AuthCodeURL(oauthState)
@@ -67,12 +26,11 @@ func (h *Handler) spotifyCallBack(c *gin.Context) {
 	// ERROR : Invalid OAuth State
 	if state != oauthState.Value {
 		http.Redirect(c.Writer, c.Request, "/", http.StatusTemporaryRedirect)
-		models.NewErrorResponse(c, http.StatusInternalServerError, "invalid oauth google state")
+		models.NewErrorResponse(c, http.StatusInternalServerError, "invalid oauth spotify state")
 		return
 	}
 	// Exchange Auth Code for Tokens
 	token, err := configs.AppConfig.SpotifyLoginConfig.Exchange(context.Background(), code)
-
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusInternalServerError, fmt.Sprintf("falied code exchange: %s", err.Error()))
 		return
@@ -94,7 +52,6 @@ func (h *Handler) spotifyCallBack(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	// Parse user data JSON Object
 	defer response.Body.Close()
 	contents, err := io.ReadAll(response.Body)
@@ -104,6 +61,7 @@ func (h *Handler) spotifyCallBack(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	user := models.User{
 		Username: oauthResponse["display_name"].(string),
 		Email:    oauthResponse["email"].(string),

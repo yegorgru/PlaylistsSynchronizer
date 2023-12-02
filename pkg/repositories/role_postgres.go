@@ -26,23 +26,29 @@ func (r *RolePostgres) Create(role models.Role) (int, error) {
 
 func (r *RolePostgres) GetAll() ([]models.Role, error) {
 	var roles []models.Role
-	query := fmt.Sprintf("SELECT * FROM %s", rolesTable)
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY id ASC ", rolesTable)
 	err := r.db.Select(&roles, query)
 	return roles, err
 }
 
-func (r *RolePostgres) GetById(id int) (models.Role, error) {
+func (r *RolePostgres) GetById(id int) (*models.Role, error) {
 	var role models.Role
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id= $1", rolesTable)
 	err := r.db.Get(&role, query, id)
-	return role, err
+	if role == (models.Role{}) {
+		return nil, nil
+	}
+	return &role, err
 }
 
-func (r *RolePostgres) GetByName(name string) (models.Role, error) {
+func (r *RolePostgres) GetByName(name string) (*models.Role, error) {
 	var role models.Role
 	query := fmt.Sprintf("SELECT * FROM %s WHERE name= $1", rolesTable)
 	err := r.db.Get(&role, query, name)
-	return role, err
+	if role == (models.Role{}) {
+		return nil, nil
+	}
+	return &role, err
 }
 
 func (r *RolePostgres) Update(id int, role models.UpdateRoleInput) error {

@@ -49,16 +49,4 @@ func LoadAuthConfig() {
 			"https://www.googleapis.com/auth/youtube.force-ssl",
 		},
 	}
-
-	// Oauth configuration for Apple Music
-	//AppConfig.AppleMusicLoginConfig = oauth2.Config{
-	//	ClientID:     os.Getenv("FB_CLIENT_ID"),
-	//	ClientSecret: os.Getenv("FB_CLIENT_SECRET"),
-	//	Endpoint:     facebook.Endpoint,
-	//	RedirectURL:  viper.GetString("domain") + viper.GetString("port") + "/auth/apple-music-callback",
-	//	Scopes: []string{
-	//		"email",
-	//		"public_profile",
-	//	},
-	//}
 }

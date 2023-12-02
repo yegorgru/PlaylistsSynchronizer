@@ -94,6 +94,39 @@ func getUserId(c *gin.Context) (int, error) {
 	return idInt, nil
 }
 
+func (h *Handler) isValidUserRole(groupID, userID int, role string) (bool, error) {
+	user, err := h.services.UserGroup.GetByGroupIdAndUserIDRole(groupID, userID, role)
+	if err != nil {
+		return false, err
+	}
+	if user == nil {
+		return false, nil
+	}
+	return true, nil
+}
+
+func (h *Handler) isValidAdmin(groupID, userID int) (bool, error) {
+	user, err := h.services.UserGroup.GetByGroupIdAndUserIDAllData(groupID, userID)
+	if err != nil {
+		return false, err
+	}
+	if user.RoleName == "ADMIN" || user.RoleName == "SUPER ADMIN" {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (h *Handler) isValidUser(groupID, userID int) (bool, error) {
+	user, err := h.services.UserGroup.GetByGroupIdAndUserID(groupID, userID)
+	if err != nil {
+		return false, err
+	}
+	if user == nil {
+		return false, nil
+	}
+	return true, nil
+}
+
 func getUserPlatform(c *gin.Context) (string, error) {
 	userPlatform, ok := c.Get(platformCtx)
 	if !ok {
