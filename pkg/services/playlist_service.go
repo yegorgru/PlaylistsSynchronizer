@@ -1,39 +1,84 @@
 package services
 
 import (
+	"PlaylistsSynchronizer/pkg/api_services"
 	"PlaylistsSynchronizer/pkg/models"
 	"PlaylistsSynchronizer/pkg/repositories"
+	"fmt"
 )
 
 type PlayListService struct {
-	repo repositories.PlayList
+	repoPlayList repositories.PlayList
+	repoToken    repositories.Token
+	repoGroup    repositories.UserGroup
+	apiService   api_services.ApiService
 }
 
-func NewPlayListService(repo repositories.PlayList) *PlayListService {
+func NewPlayListService(repoPlayList repositories.PlayList, repoToken repositories.Token,
+	repoGroup repositories.UserGroup) *PlayListService {
 	return &PlayListService{
-		repo: repo,
+		repoPlayList: repoPlayList,
+		repoToken:    repoToken,
+		repoGroup:    repoGroup,
+		apiService:   *api_services.NewApiService(repoToken),
 	}
-}
-
-func (s *PlayListService) Create(playList models.PlayList) (int, error) {
-	return s.repo.Create(playList)
 }
 
 func (s *PlayListService) GetAll() ([]models.PlayList, error) {
-	return s.repo.GetAll()
+	return s.repoPlayList.GetAll()
 }
 
-func (s *PlayListService) GetById(id int) (models.PlayList, error) {
-	return s.repo.GetById(id)
+func (s *PlayListService) GetById(id int) (*models.PlayList, error) {
+	return s.repoPlayList.GetById(id)
 }
 
-func (s *PlayListService) Update(id int, role models.UpdatePlayListInput) error {
-	if err := role.Validate(); err != nil {
+func (s *PlayListService) Update(id int, input models.UpdatePlayListInput) error {
+	if err := input.Validate(); err != nil {
 		return err
 	}
-	return s.repo.Update(id, role)
+	playList, err := s.repoPlayList.GetById(id)
+	if err != nil {
+		return err
+	}
+	err = s.updateSpotify(playList.GroupID, input)
+	if err != nil {
+		return err
+	}
+	err = s.updateYouTubeMusic(playList.GroupID, input)
+	if err != nil {
+		return err
+	}
+	fmt.Println(input.Name)
+	return s.repoPlayList.Update(id, input)
 }
 
-func (s *PlayListService) Delete(id int) error {
-	return s.repo.Delete(id)
+func (s *PlayListService) updateSpotify(groupID int, input models.UpdatePlayListInput) error {
+	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
+	if err != nil {
+		return err
+	}
+	for _, value := range usersSpotify {
+		spotify := s.apiService.GetSpotifyServiceApi()
+		err := spotify.UpdatePlayList(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri},
+			value.PlayListID, input)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *PlayListService) updateYouTubeMusic(groupID int, input models.UpdatePlayListInput) error {
+	usersYouTubeMusic, err := s.repoGroup.GetByGroupIdYouTubeMusicUser(groupID)
+	if err != nil {
+		return err
+	}
+	for _, value := range usersYouTubeMusic {
+		youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
+		err = youTubeMusic.UpdatePlayList(value.Token, value.PlayListID, input)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"PlaylistsSynchronizer/pkg/models"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 type PlayListPostgres struct {
@@ -26,33 +27,57 @@ func (r *PlayListPostgres) Create(playlist models.PlayList) (int, error) {
 
 func (r *PlayListPostgres) GetAll() ([]models.PlayList, error) {
 	var playLists []models.PlayList
-	query := fmt.Sprintf("SELECT * FROM %s", playlistsTable)
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY id ASC ", playlistsTable)
 	err := r.db.Select(&playLists, query)
 	return playLists, err
 }
 
-func (r *PlayListPostgres) GetById(id int) (models.PlayList, error) {
+func (r *PlayListPostgres) GetById(id int) (*models.PlayList, error) {
 	var playList models.PlayList
-	query := fmt.Sprintf("SELECT * FROM %s WHERE id= $1", playlistsTable)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id=$1", playlistsTable)
 	err := r.db.Get(&playList, query, id)
-	return playList, err
+	if playList == (models.PlayList{}) {
+		return nil, nil
+	}
+	return &playList, err
 }
 
-func (r *PlayListPostgres) GetByGroupId(id int) (models.PlayList, error) {
+func (r *PlayListPostgres) GetByGroupId(id int) (*models.PlayList, error) {
 	var playList models.PlayList
 	query := fmt.Sprintf("SELECT * FROM %s WHERE groupID=$1", playlistsTable)
 	err := r.db.Get(&playList, query, id)
-	return playList, err
+	if playList == (models.PlayList{}) {
+		return nil, nil
+	}
+	return &playList, err
 }
 
 func (r *PlayListPostgres) Update(id int, playList models.UpdatePlayListInput) error {
-	query := fmt.Sprintf("UPDATE %s SET name=$1, description=$2, groupID=$3 WHERE id=$4", playlistsTable)
-	_, err := r.db.Exec(query, playList.Name, playList.Description, playList.GroupID, id)
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if playList.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argId))
+		args = append(args, *playList.Name)
+		argId++
+	}
+
+	if playList.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, *playList.Description)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE id=$%d", playlistsTable, setQuery, argId)
+	args = append(args, id)
+	_, err := r.db.Exec(query, args...)
 	return err
 }
 
 func (r *PlayListPostgres) Delete(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id= $1", playlistsTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", playlistsTable)
 	_, err := r.db.Exec(query, id)
 	return err
 }

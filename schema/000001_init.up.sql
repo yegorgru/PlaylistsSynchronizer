@@ -74,5 +74,14 @@ CREATE TABLE playlist_track
     playListID serial REFERENCES playlists(ID) ON DELETE CASCADE not null
 );
 
+CREATE TABLE youtube_music_tracks
+(
+    ID serial PRIMARY KEY,
+    userID serial REFERENCES users(ID) ON DELETE CASCADE not null,
+    trackID serial REFERENCES tracks(ID) ON DELETE CASCADE not null,
+    playListID serial REFERENCES playlists(ID) ON DELETE CASCADE not null,
+    playListYouTubeMusicID varchar unique
+);
+
 
 

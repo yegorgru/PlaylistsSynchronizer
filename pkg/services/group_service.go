@@ -4,30 +4,34 @@ import (
 	"PlaylistsSynchronizer/pkg/api_services"
 	"PlaylistsSynchronizer/pkg/models"
 	"PlaylistsSynchronizer/pkg/repositories"
-	"github.com/gin-gonic/gin"
+	"errors"
 )
 
 type GroupService struct {
-	reposAuth  repositories.Authorization
-	repoGroup  repositories.Group
-	repoRole   repositories.Role
-	repoToken  repositories.Token
-	apiService api_services.ApiService
+	reposAuth     repositories.Authorization
+	repoGroup     repositories.Group
+	repoRole      repositories.Role
+	repoToken     repositories.Token
+	repoUserGroup repositories.UserGroup
+	repoTracks    repositories.Track
+	apiService    api_services.ApiService
 }
 
 func NewGroupService(reposAuth repositories.Authorization, repoGroup repositories.Group, repoRole repositories.Role,
-	repoToken repositories.Token) *GroupService {
+	repoToken repositories.Token, repoUserGroup repositories.UserGroup, repoTracks repositories.Track) *GroupService {
 	return &GroupService{
-		reposAuth:  reposAuth,
-		repoGroup:  repoGroup,
-		repoRole:   repoRole,
-		repoToken:  repoToken,
-		apiService: *api_services.NewApiService(repoToken),
+		reposAuth:     reposAuth,
+		repoGroup:     repoGroup,
+		repoRole:      repoRole,
+		repoToken:     repoToken,
+		repoUserGroup: repoUserGroup,
+		repoTracks:    repoTracks,
+		apiService:    *api_services.NewApiService(repoToken),
 	}
 }
 
-func (s *GroupService) Create(c *gin.Context, userID int, group models.UserCreateGroupInput) (int, error) {
-	role, err := s.repoRole.GetByName("ADMIN")
+func (s *GroupService) Create(userID int, group models.UserCreateGroupInput) (int, error) {
+	role, err := s.repoRole.GetByName("SUPER ADMIN")
 	if err != nil {
 		return 0, err
 	}
@@ -68,8 +72,31 @@ func (s *GroupService) GetAll() ([]models.Group, error) {
 	return s.repoGroup.GetAll()
 }
 
-func (s *GroupService) GetById(id int) (models.Group, error) {
-	return s.repoGroup.GetById(id)
+func (s *GroupService) GetById(id int) (*models.AllGroupData, error) {
+	group, err := s.repoGroup.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+	if group == nil {
+		return nil, errors.New("there is no group with such id")
+	}
+	users, err := s.repoUserGroup.GetUsersByGroupId(group.ID)
+	if err != nil {
+		return nil, err
+	}
+	var allGroupData models.AllGroupData
+	if len(users) != 0 {
+		playListID := users[0].PlayListID
+		tracks, err := s.repoTracks.GetByPlayListID(playListID)
+		if err != nil {
+			return nil, err
+		}
+		allGroupData = models.AllGroupData{Name: group.Name, Description: group.Description, Users: users,
+			Tracks: tracks, PlayListID: playListID}
+		return &allGroupData, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (s *GroupService) Update(id int, group models.UpdateGroupInput) error {
@@ -80,5 +107,43 @@ func (s *GroupService) Update(id int, group models.UpdateGroupInput) error {
 }
 
 func (s *GroupService) Delete(id int) error {
+	err := s.DeleteSpotify(id)
+	if err != nil {
+		return err
+	}
+	err = s.DeleteYouTubeMusic(id)
+	if err != nil {
+		return err
+	}
 	return s.repoGroup.Delete(id)
+}
+
+func (s *GroupService) DeleteSpotify(id int) error {
+	usersSpotify, err := s.repoUserGroup.GetByGroupIdSpotifyUser(id)
+	if err != nil {
+		return err
+	}
+	for _, value := range usersSpotify {
+		spotify := s.apiService.GetSpotifyServiceApi()
+		err := spotify.DeletePlayList(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri}, value.PlayListID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *GroupService) DeleteYouTubeMusic(id int) error {
+	usersYouTubeMusic, err := s.repoUserGroup.GetByGroupIdYouTubeMusicUser(id)
+	if err != nil {
+		return err
+	}
+	for _, value := range usersYouTubeMusic {
+		youTubeMusic := s.apiService.GetYouTubeMusicApiServiceApi()
+		err = youTubeMusic.DeletePlayList(value.Token, value.PlayListID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
