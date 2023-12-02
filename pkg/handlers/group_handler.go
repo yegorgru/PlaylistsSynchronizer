@@ -35,7 +35,7 @@ func (h *Handler) createGroup(c *gin.Context) {
 		return
 	}
 	input.Platform = platform
-	id, err := h.services.Group.Create(c, userID, input)
+	id, err := h.services.Group.Create(userID, input)
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -51,7 +51,6 @@ func (h *Handler) getAllGroups(c *gin.Context) {
 	if err != nil {
 		return
 	}
-
 	groups, err := h.services.Group.GetAll()
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -72,62 +71,97 @@ func (h *Handler) getGroupById(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
+
 	group, err := h.services.Group.GetById(id)
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-
 	c.JSON(http.StatusOK, group)
 }
 
 func (h *Handler) updateGroup(c *gin.Context) {
-	_, err := getUserId(c)
+	userID, err := getUserId(c)
 	if err != nil {
-		return
-	}
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
 
-	body, _ := io.ReadAll(c.Request.Body)
-	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-	// Check if there are any additional fields in the JSON body
-	if err := h.validateJSONTags(body, models.UpdateGroupInput{}); err != nil {
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid groupID param")
+		return
+	}
+	isGroupExist, err := h.services.Group.GetById(groupID)
+	if err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-
-	var input models.UpdateGroupInput
-
-	if err := c.BindJSON(&input); err != nil {
-		models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
+	if isGroupExist == nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "there is no group with such id")
 		return
 	}
-
-	if err := h.services.Group.Update(id, input); err != nil {
-		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+	isValidUser, err := h.isValidAdmin(groupID, userID)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "user validation error")
 		return
 	}
-	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
+	if isValidUser {
+		body, _ := io.ReadAll(c.Request.Body)
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+		if err := h.validateJSONTags(body, models.UpdateGroupInput{}); err != nil {
+			models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		var input models.UpdateGroupInput
+		if err := c.BindJSON(&input); err != nil {
+			models.NewErrorResponse(c, http.StatusBadRequest, "invalid input body")
+			return
+		}
+
+		if err := h.services.Group.Update(groupID, input); err != nil {
+			models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
+	} else {
+		models.NewErrorResponse(c, http.StatusForbidden, "invalid permission")
+		return
+	}
 }
 
 func (h *Handler) deleteGroup(c *gin.Context) {
-	_, err := getUserId(c)
+	userID, err := getUserId(c)
 	if err != nil {
-		return
-	}
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
 
-	if err := h.services.Group.Delete(id); err != nil {
-		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+	groupID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "invalid groupID param")
 		return
 	}
-	c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
+	isGroupExist, err := h.services.Group.GetById(groupID)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if isGroupExist == nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "there is no group with such id")
+		return
+	}
+	isValidUser, err := h.isValidUserRole(groupID, userID, "SUPER ADMIN")
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "user validation error")
+		return
+	}
+	if isValidUser {
+		if err := h.services.Group.Delete(groupID); err != nil {
+			models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, models.StatusResponse{Status: "ok"})
+	} else {
+		models.NewErrorResponse(c, http.StatusForbidden, "invalid permission")
+		return
+	}
 }

@@ -32,10 +32,6 @@ func (h *Handler) createRole(c *gin.Context) {
 	})
 }
 
-type getAllRoleResponse struct {
-	Data []models.Role `json:data`
-}
-
 func (h *Handler) getAllRole(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
@@ -48,9 +44,7 @@ func (h *Handler) getAllRole(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, getAllRoleResponse{
-		Data: roles,
-	})
+	c.JSON(http.StatusOK, roles)
 }
 
 func (h *Handler) getRoleById(c *gin.Context) {
@@ -62,6 +56,15 @@ func (h *Handler) getRoleById(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+	isRoleExist, err := h.services.Role.GetById(id)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if isRoleExist == nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "there is no role with such id")
 		return
 	}
 	role, err := h.services.Role.GetById(id)
@@ -83,7 +86,15 @@ func (h *Handler) updateRole(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
-
+	isRoleExist, err := h.services.Role.GetById(id)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if isRoleExist == nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "there is no role with such id")
+		return
+	}
 	body, _ := io.ReadAll(c.Request.Body)
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	// Check if there are any additional fields in the JSON body
@@ -116,7 +127,15 @@ func (h *Handler) deleteRole(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusBadRequest, "invalid id param")
 		return
 	}
-
+	isRoleExist, err := h.services.Role.GetById(id)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	if isRoleExist == nil {
+		models.NewErrorResponse(c, http.StatusBadRequest, "there is no role with such id")
+		return
+	}
 	if err := h.services.Role.Delete(id); err != nil {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"io"
 )
 
@@ -39,10 +38,6 @@ type UserGroup struct {
 	PlayListID string `json:"playListID" db:"playlistid"`
 }
 
-type UserGroupInput struct {
-	GroupID int `json:"groupID" binding:"required"`
-}
-
 type PlayList struct {
 	ID          int    `json:"id" db:"id"`
 	Name        string `json:"name" db:"name" binding:"required"`
@@ -61,21 +56,21 @@ type Track struct {
 	YouTubeMusicID string `json:"youTubeMusicID" db:"youtubemusicid"`
 }
 
-type AddTrackInput struct {
-	SpotifyUri     string `json:"spotifyUri" binding:"required"`
-	YouTubeMusicID string `json:"youTubeMusicID" binding:"required"`
-	GroupID        int    `json:"groupID" binding:"required"`
-	PlayListID     int
+type PlayListTrack struct {
+	ID                     int    `json:"id" db:"id"`
+	TrackID                int    `json:"trackID" db:"trackid"`
+	UserID                 int    `json:"userID" db:"userid"`
+	PlayListID             int    `json:"playListID" db:"playlistid"`
+	PlayListYouTubeMusicID string `json:"playListYouTubeMusicID" db:"playlistyoutubemusicid"`
+	Token                  string `db:"accesstoken"`
 }
 
-type UserCreateGroupInput struct {
-	ID                  int    `json:"id"`
-	GroupName           string `json:"groupName" binding:"required"`
-	PlayListName        string `json:"playListName" binding:"required"`
-	GroupDescription    string `json:"groupDescription" binding:"required"`
-	PlayListDescription string `json:"playListDescription" binding:"required"`
-	PlayListID          string
-	Platform            string
+type CreateTrack struct {
+	ID                     int    `json:"id" db:"id"`
+	UserID                 int    `json:"userID" db:"userid"`
+	SpotifyUri             string `json:"spotifyUri" db:"spotifyuri"`
+	YouTubeMusicID         string `json:"youTubeMusicID" db:"youtubemusicid"`
+	PlayListYouTubeMusicID string `json:"PlayListYouTubeMusicID" db:"playlistyoutubemusicid"`
 }
 
 type UserGroupToken struct {
@@ -91,28 +86,6 @@ type UserGroupToken struct {
 type UserClaims struct {
 	UserID       int    `json:"userID"`
 	UserPlatform string `json:"userPlatform"`
-}
-
-type UpdateGroupInput struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-}
-
-type UpdateUserGroupInput struct {
-	UserID     *int    `json:"userID"`
-	GroupID    *int    `json:"groupID"`
-	RoleID     *int    `json:"roleID"`
-	PlayListID *string `json:"playListIDs"`
-}
-
-type UpdateRoleInput struct {
-	Name *string `json:"name"`
-}
-
-type UpdatePlayListInput struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	GroupID     *int    `json:"groupID"`
 }
 
 type ApiToken struct {
@@ -132,10 +105,6 @@ type RefreshToken struct {
 	Body  io.Reader
 }
 
-type RefreshTokenInput struct {
-	UserId int `json:"userId" binding:"required"`
-}
-
 type SpotifyData struct {
 	Token      string
 	SpotifyUri string
@@ -144,32 +113,4 @@ type SpotifyData struct {
 type ApiTrackID struct {
 	SpotifyUri   string
 	YouTubeMusic string
-}
-
-func (i UpdateGroupInput) Validate() error {
-	if i.Name == nil && i.Description == nil {
-		return errors.New("update structure has no value")
-	}
-	return nil
-}
-
-func (i UpdateUserGroupInput) Validate() error {
-	if i.UserID == nil && i.GroupID == nil && i.RoleID == nil && i.PlayListID == nil {
-		return errors.New("update structure has no value")
-	}
-	return nil
-}
-
-func (i UpdateRoleInput) Validate() error {
-	if i.Name == nil {
-		return errors.New("update structure has no value")
-	}
-	return nil
-}
-
-func (i UpdatePlayListInput) Validate() error {
-	if i.Name == nil && i.Description == nil && i.GroupID == nil {
-		return errors.New("update structure has no value")
-	}
-	return nil
 }

@@ -44,6 +44,10 @@ func (s *AuthService) GetUser(email string) (*models.User, error) {
 	return s.repo.GetUser(email)
 }
 
+func (s *AuthService) GetUserByID(id int) (*models.User, error) {
+	return s.repo.GetUserByID(id)
+}
+
 func (s *AuthService) GenerateToken(email string) (string, error) {
 	user, err := s.repo.GetUser(email)
 	if err != nil {

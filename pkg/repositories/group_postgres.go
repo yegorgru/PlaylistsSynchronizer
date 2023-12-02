@@ -4,6 +4,7 @@ import (
 	"PlaylistsSynchronizer/pkg/models"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 type GroupPostgres struct {
@@ -45,26 +46,47 @@ func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroupI
 
 func (r *GroupPostgres) GetAll() ([]models.Group, error) {
 	var groups []models.Group
-	query := fmt.Sprintf("SELECT * FROM %s", groupsTable)
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY id ASC ", groupsTable)
 	err := r.db.Select(&groups, query)
 	return groups, err
 }
 
-func (r *GroupPostgres) GetById(id int) (models.Group, error) {
+func (r *GroupPostgres) GetById(id int) (*models.Group, error) {
 	var group models.Group
 	query := fmt.Sprintf("SELECT * FROM %s WHERE id= $1", groupsTable)
 	err := r.db.Get(&group, query, id)
-	return group, err
+	if group == (models.Group{}) {
+		return nil, nil
+	}
+	return &group, err
 }
 
 func (r *GroupPostgres) Update(id int, group models.UpdateGroupInput) error {
-	query := fmt.Sprintf("UPDATE %s SET name=$1, description=$2 WHERE id=$3", groupsTable)
-	_, err := r.db.Exec(query, group.Name, group.Description, id)
+	setValues := make([]string, 0)
+	args := make([]interface{}, 0)
+	argId := 1
+
+	if group.Name != nil {
+		setValues = append(setValues, fmt.Sprintf("name=$%d", argId))
+		args = append(args, *group.Name)
+		argId++
+	}
+
+	if group.Description != nil {
+		setValues = append(setValues, fmt.Sprintf("description=$%d", argId))
+		args = append(args, *group.Description)
+		argId++
+	}
+
+	setQuery := strings.Join(setValues, ", ")
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE id=$%d", groupsTable, setQuery, argId)
+	args = append(args, id)
+	_, err := r.db.Exec(query, args...)
 	return err
 }
 
 func (r *GroupPostgres) Delete(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id= $1", groupsTable)
+	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", groupsTable)
 	_, err := r.db.Exec(query, id)
 	return err
 }

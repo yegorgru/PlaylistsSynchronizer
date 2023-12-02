@@ -14,39 +14,68 @@ func NewTrackPostgres(db *sqlx.DB) *TrackPostgres {
 	return &TrackPostgres{db: db}
 }
 
-func (t *TrackPostgres) Create(playListId int, track models.Track) (int, error) {
-	tx, err := t.db.Begin()
-	if err != nil {
-		return 0, err
-	}
-	var ID int
+func (t *TrackPostgres) Create(track models.CreateTrack) (int, error) {
+	var trackID int
 	query := fmt.Sprintf("INSERT INTO %s (spotifyuri, youtubemusicid) values ($1, $2) RETURNING id", tracksTable)
 	row1 := t.db.QueryRow(query, track.SpotifyUri, track.YouTubeMusicID)
-	if err := row1.Scan(&ID); err != nil {
-		tx.Rollback()
+	if err := row1.Scan(&trackID); err != nil {
 		return 0, err
 	}
+	return trackID, nil
+}
+
+func (t *TrackPostgres) AddYouTubeMusicTrackPlayList(playListId int, track models.CreateTrack) (int, error) {
+	var youTubeTrackID int
+	youTubeTrack := fmt.Sprintf("INSERT INTO %s (userID, trackID, playListID, playListYouTubeMusicID) "+
+		"values ($1, $2, $3, $4) RETURNING id", youtubeMusicTracks)
+	row1 := t.db.QueryRow(youTubeTrack, track.UserID, track.ID, playListId, track.PlayListYouTubeMusicID)
+	if err := row1.Scan(&youTubeTrackID); err != nil {
+		return 0, err
+	}
+	return youTubeTrackID, nil
+}
+
+func (t *TrackPostgres) AddSpotifyTrackPlayList(playListId int, track models.CreateTrack) (int, error) {
 	var playListTrackID int
-	playListTrack := fmt.Sprintf("INSERT INTO %s (trackID, playListID) values ($1, $2) RETURNING ID", playlistTrackTable)
-	row2 := t.db.QueryRow(playListTrack, ID, playListId)
-	if err := row2.Scan(&playListTrackID); err != nil {
-		tx.Rollback()
+	playListTrack := fmt.Sprintf("INSERT INTO %s (trackID, playListID) values ($1, $2) RETURNING id", playlistTrackTable)
+	row1 := t.db.QueryRow(playListTrack, track.ID, playListId)
+	if err := row1.Scan(&playListTrackID); err != nil {
 		return 0, err
 	}
-	return ID, nil
+	return playListTrackID, nil
 }
 
 func (t *TrackPostgres) GetAll() ([]models.Track, error) {
 	var tracks []models.Track
-	query := fmt.Sprintf("SELECT * FROM %s", tracksTable)
+	query := fmt.Sprintf("SELECT * FROM %s ORDER BY id ASC ", tracksTable)
 	err := t.db.Select(&tracks, query)
+	return tracks, err
+}
+
+func (t *TrackPostgres) GetByID(ID int) (*models.Track, error) {
+	var track models.Track
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id=$1", tracksTable)
+	err := t.db.Get(&track, query, ID)
+	if track == (models.Track{}) {
+		return nil, nil
+	}
+	return &track, err
+}
+
+func (t *TrackPostgres) GetByPlayListTrackID(playListID, trackID int) ([]models.PlayListTrack, error) {
+	var tracks []models.PlayListTrack
+	query := fmt.Sprintf("SELECT ytm.id, ytm.userid, ytm.trackid, ytm.playlistid, "+
+		"ytm.playlistyoutubemusicid, uytm.accesstoken FROM %s ytm JOIN %s uytm "+
+		"ON ytm.userid = uytm.userid WHERE ytm.playListID=$1 AND ytm.trackID=$2 ORDER BY id ASC",
+		youtubeMusicTracks, userYouTubeMusicTable)
+	err := t.db.Select(&tracks, query, playListID, trackID)
 	return tracks, err
 }
 
 func (t *TrackPostgres) GetByPlayListID(playListID int) ([]models.Track, error) {
 	var tracks []models.Track
-	query := fmt.Sprintf("SELECT t.id, t.spotifyUri, t.youTubeMusicID "+
-		"FROM %s t INNER JOIN %s pt ON t.id = pt.trackID WHERE pt.playListID=$1", tracksTable, playlistTrackTable)
+	query := fmt.Sprintf("SELECT t.id, t.spotifyuri, t.youtubemusicid "+
+		"FROM %s t INNER JOIN %s pt ON t.id = pt.trackid WHERE pt.playlistid=$1 ORDER BY t.id ASC", tracksTable, playlistTrackTable)
 	err := t.db.Select(&tracks, query, playListID)
 	return tracks, err
 }
@@ -80,8 +109,14 @@ func (t *TrackPostgres) Delete(id int) error {
 	return err
 }
 
-func (t *TrackPostgres) DeleteFromPlayList(id int) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE id=$1", playlistTrackTable)
-	_, err := t.db.Exec(query, id)
+func (t *TrackPostgres) DeleteFromPlayList(playListID, trackID int) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE playListID=$1 AND trackID=$2", playlistTrackTable)
+	_, err := t.db.Exec(query, playListID, trackID)
+	return err
+}
+
+func (t *TrackPostgres) DeleteFromYouTubeMusicPlayList(userID, playListID, trackID int) error {
+	query := fmt.Sprintf("DELETE FROM %s WHERE userID=$1 AND playListID=$2 AND trackID=$3", youtubeMusicTracks)
+	_, err := t.db.Exec(query, userID, playListID, trackID)
 	return err
 }
