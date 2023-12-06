@@ -30,7 +30,7 @@ func NewGroupService(reposAuth repositories.Authorization, repoGroup repositorie
 	}
 }
 
-func (s *GroupService) Create(userID int, group models.UserCreateGroupInput) (int, error) {
+func (s *GroupService) Create(userID int, group models.UserCreateGroup) (int, error) {
 	role, err := s.repoRole.GetByName("SUPER ADMIN")
 	if err != nil {
 		return 0, err

@@ -96,9 +96,7 @@ func (h *Handler) spotifyCallBack(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"access_token": userToken,
-	})
+	c.JSON(http.StatusOK, models.AccessTokenResponse{AccessToken: newToken.TokenValue})
 }
 
 func (h *Handler) youTubeMusicLogin(c *gin.Context) {
@@ -179,9 +177,7 @@ func (h *Handler) youTubeMusicCallBack(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"access_token": userToken,
-	})
+	c.JSON(http.StatusOK, models.AccessTokenResponse{AccessToken: newToken.TokenValue})
 }
 
 func (h *Handler) appleMusicLogin(c *gin.Context) {
@@ -192,22 +188,48 @@ func (h *Handler) appleMusicCallBack(c *gin.Context) {
 	//TODO
 }
 
+// @Summary RefreshToken
+// @Tags auth
+// @Description refresh access token
+// @ID refresh-token
+// @Accept json
+// @Produce json
+// @Param input body models.RefreshTokenInput true "user id for token refresh"
+// @Success 200 {object} models.AccessTokenResponse
+// @Failure 400,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /refresh-token [post]
 func (h *Handler) refreshToken(c *gin.Context) {
 	var input models.RefreshTokenInput
 	if err := c.BindJSON(&input); err != nil {
 		models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	newToken, err := h.services.RefreshToken(input.UserId)
+	userToken, err := h.services.RefreshToken(input.UserId)
 	if err != nil {
 		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"accessToken": newToken,
-	})
+	newToken := models.Token{TokenValue: userToken, Revoked: false, UserID: input.UserId}
+	_, err = h.services.Token.Create(newToken)
+	if err != nil {
+		models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, models.AccessTokenResponse{AccessToken: newToken.TokenValue})
 }
 
+// @Summary Logout
+// @Tags auth
+// @Description logout from service
+// @ID logout
+// @Produce json
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /auth/logout [post]
 func (h *Handler) logout(c *gin.Context) {
 	token, err := checkHeaderToken(c)
 	if err != nil {

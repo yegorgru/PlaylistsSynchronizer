@@ -30,7 +30,7 @@ func (s *TrackService) GetByPlayListTrackID(playListID, trackID int) ([]models.P
 	return s.repoTrack.GetByPlayListTrackID(playListID, trackID)
 }
 
-func (s *TrackService) Add(input models.AddTrackInput) (int, error) {
+func (s *TrackService) Add(input models.AddTrack) (int, error) {
 	isTrackExist, err := s.repoTrack.GetByTrackApiID(models.ApiTrackID{SpotifyUri: input.SpotifyUri,
 		YouTubeMusic: input.YouTubeMusicID})
 	if err != nil {
