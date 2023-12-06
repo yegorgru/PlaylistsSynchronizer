@@ -17,7 +17,7 @@ type Authorization interface {
 }
 
 type Group interface {
-	Create(userID int, group models.UserCreateGroupInput) (int, error)
+	Create(userID int, group models.UserCreateGroup) (int, error)
 	GetAll() ([]models.Group, error)
 	GetById(id int) (*models.AllGroupData, error)
 	Update(id int, group models.UpdateGroupInput) error
@@ -51,7 +51,7 @@ type PlayList interface {
 }
 
 type Track interface {
-	Add(input models.AddTrackInput) (int, error)
+	Add(input models.AddTrack) (int, error)
 	GetByPlayListTrackID(playListID, trackID int) ([]models.PlayListTrack, error)
 	DeleteFromPlayList(groupID, playListID, trackID int) error
 }
@@ -76,7 +76,7 @@ type Service struct {
 
 func NewService(repos *repositories.Repository) *Service {
 	return &Service{
-		Authorization: NewAuthService(repos.Authorization),
+		Authorization: NewAuthService(repos.Authorization, repos.Token),
 		Group: NewGroupService(repos.Authorization, repos.Group, repos.Role, repos.Token, repos.UserGroup,
 			repos.Track),
 		UserGroup: NewUserGroupService(repos.Authorization, repos.UserGroup, repos.PlayList, repos.Role, repos.Track,

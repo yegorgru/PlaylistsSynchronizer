@@ -9,16 +9,24 @@ type UserGroupInput struct {
 type AddTrackInput struct {
 	SpotifyUri     string `json:"spotifyUri" binding:"required,min=1"`
 	YouTubeMusicID string `json:"youTubeMusicID" binding:"required,min=1"`
+}
+
+type AddTrack struct {
+	SpotifyUri     string `json:"spotifyUri" binding:"required,min=1"`
+	YouTubeMusicID string `json:"youTubeMusicID" binding:"required,min=1"`
 	PlayListID     int
 	GroupID        int
 	UserID         int
 }
 
-type DeleteTrackInput struct {
-	TrackID int `json:"trackID" binding:"required"`
+type UserCreateGroupInput struct {
+	GroupName           string `json:"groupName" binding:"required,min=1,max=20"`
+	PlayListName        string `json:"playListName" binding:"required,min=1,max=20"`
+	GroupDescription    string `json:"groupDescription" binding:"required,min=1,max=50"`
+	PlayListDescription string `json:"playListDescription" binding:"required,min=1,max=50"`
 }
 
-type UserCreateGroupInput struct {
+type UserCreateGroup struct {
 	ID                  int    `json:"id"`
 	GroupName           string `json:"groupName" binding:"required,min=1,max=20"`
 	PlayListName        string `json:"playListName" binding:"required,min=1,max=20"`

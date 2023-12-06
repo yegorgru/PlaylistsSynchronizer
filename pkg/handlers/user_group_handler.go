@@ -9,6 +9,18 @@ import (
 	"strconv"
 )
 
+// @Summary Add User To Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description add user to group
+// @ID add-user-to-group
+// @Produce json
+// @Param id path int true "group id"
+// @Success 200 {object}  models.CreateResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/users [post]
 func (h *Handler) createUserGroup(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
@@ -40,11 +52,21 @@ func (h *Handler) createUserGroup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"id": id,
-	})
+	c.JSON(http.StatusOK, models.CreateResponse{ID: id})
 }
 
+// @Summary Get All Users From Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description get all users from group
+// @ID get-all-users-from-group
+// @Produce json
+// @Param id path int true "group id"
+// @Success 200 {object} []models.UserGroupData
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/users [get]
 func (h *Handler) getAllUserGroups(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
@@ -73,6 +95,19 @@ func (h *Handler) getAllUserGroups(c *gin.Context) {
 	c.JSON(http.StatusOK, userGroup)
 }
 
+// @Summary Get User By ID From Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description get user by id from group
+// @ID get-user-by-id-from-group
+// @Produce json
+// @Param id path int true "group id"
+// @Param userID path int true "user id"
+// @Success 200 {object} models.UserGroupData
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/users/{userID} [get]
 func (h *Handler) getUserGroupByUserId(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
@@ -111,6 +146,21 @@ func (h *Handler) getUserGroupByUserId(c *gin.Context) {
 	c.JSON(http.StatusOK, userGroup)
 }
 
+// @Summary Update User By ID From Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description update user by id from group
+// @ID update-user-by-id-from-group
+// @Accept json
+// @Produce json
+// @Param id path int true "group id"
+// @Param userID path int true "user id"
+// @Param input body models.UpdateUserGroupInput true "new user role"
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/users/{userID} [put]
 func (h *Handler) updateUserGroup(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
@@ -172,6 +222,19 @@ func (h *Handler) updateUserGroup(c *gin.Context) {
 	}
 }
 
+// @Summary Delete User By ID From Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description delete user by id from group
+// @ID delete-user-by-id-from-group
+// @Produce json
+// @Param id path int true "group id"
+// @Param userID path int true "user id"
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/users/{userID} [delete]
 func (h *Handler) deleteUserGroup(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
@@ -223,6 +286,18 @@ func (h *Handler) deleteUserGroup(c *gin.Context) {
 	}
 }
 
+// @Summary Leave Group
+// @Security ApiKeyAuth
+// @Tags user-groups
+// @Description leave group
+// @ID leave-group
+// @Produce json
+// @Param id path int true "group id"
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/groups/{id}/leave [post]
 func (h *Handler) leaveGroup(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {

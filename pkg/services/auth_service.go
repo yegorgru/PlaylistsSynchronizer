@@ -21,35 +21,36 @@ type tokenClaims struct {
 }
 
 type AuthService struct {
-	repo repositories.Authorization
+	repoAuth  repositories.Authorization
+	repoToken repositories.Token
 }
 
-func NewAuthService(repo repositories.Authorization) *AuthService {
-	return &AuthService{repo: repo}
+func NewAuthService(repoAuth repositories.Authorization, repoToken repositories.Token) *AuthService {
+	return &AuthService{repoAuth: repoAuth, repoToken: repoToken}
 }
 
 func (s *AuthService) CreateUser(user models.User) (int, error) {
-	return s.repo.CreateUser(user)
+	return s.repoAuth.CreateUser(user)
 }
 
 func (s *AuthService) CreateUserSpotify(spotifyUri string, token models.ApiToken, user models.User) (int, error) {
-	return s.repo.CreateUserSpotify(spotifyUri, token, user)
+	return s.repoAuth.CreateUserSpotify(spotifyUri, token, user)
 }
 
 func (s *AuthService) CreateUserYouTubeMusic(token string, user models.User) (int, error) {
-	return s.repo.CreateUserYouTubeMusic(token, user)
+	return s.repoAuth.CreateUserYouTubeMusic(token, user)
 }
 
 func (s *AuthService) GetUser(email string) (*models.User, error) {
-	return s.repo.GetUser(email)
+	return s.repoAuth.GetUser(email)
 }
 
 func (s *AuthService) GetUserByID(id int) (*models.User, error) {
-	return s.repo.GetUserByID(id)
+	return s.repoAuth.GetUserByID(id)
 }
 
 func (s *AuthService) GenerateToken(email string) (string, error) {
-	user, err := s.repo.GetUser(email)
+	user, err := s.repoAuth.GetUser(email)
 	if err != nil {
 		return "", err
 	}
@@ -73,6 +74,10 @@ func (s *AuthService) RefreshToken(userId int) (string, error) {
 		UserId: userId,
 	})
 	tokenSigned, err := token.SignedString([]byte(signingKey))
+	err = s.repoToken.RevokeAllUserTokens(userId)
+	if err != nil {
+		return "", err
+	}
 	return tokenSigned, err
 }
 
