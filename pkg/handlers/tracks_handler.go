@@ -9,6 +9,20 @@ import (
 	"strconv"
 )
 
+// @Summary Add Track
+// @Security ApiKeyAuth
+// @Tags tracks
+// @Description add new track
+// @ID add-track
+// @Accept json
+// @Produce json
+// @Param id path int true "playlist id"
+// @Param input body models.AddTrackInput true "track info"
+// @Success 200 {object} models.CreateResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/playlists/{id}/tracks [post]
 func (h *Handler) addTrack(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
@@ -46,24 +60,34 @@ func (h *Handler) addTrack(c *gin.Context) {
 		return
 	}
 	if isValidUser {
-		input.GroupID = playList.GroupID
-		input.PlayListID = playList.ID
-		input.UserID = userID
-		id, err := h.services.Track.Add(input)
+		newTrack := models.AddTrack{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID,
+			PlayListID: playList.ID, GroupID: playList.GroupID, UserID: userID}
+		id, err := h.services.Track.Add(newTrack)
 		if err != nil {
 			models.NewErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
-		c.JSON(http.StatusOK, map[string]interface{}{
-			"id": id,
-		})
+		c.JSON(http.StatusOK, models.CreateResponse{ID: id})
 	} else {
 		models.NewErrorResponse(c, http.StatusBadRequest, "you are not member of the group")
 		return
 	}
 }
 
+// @Summary Delete Track
+// @Security ApiKeyAuth
+// @Tags tracks
+// @Description delete track
+// @ID delete-track
+// @Produce json
+// @Param id path int true "playlist id"
+// @Param trackID path int true "track id"
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/playlists/{id}/tracks/{trackID} [delete]
 func (h *Handler) deleteTrack(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {

@@ -15,7 +15,7 @@ type Authorization interface {
 }
 
 type Group interface {
-	Create(userID, roleID int, group models.UserCreateGroupInput) (int, error)
+	Create(userID, roleID int, group models.UserCreateGroup) (int, error)
 	GetAll() ([]models.Group, error)
 	GetById(id int) (*models.Group, error)
 	Update(id int, group models.UpdateGroupInput) error

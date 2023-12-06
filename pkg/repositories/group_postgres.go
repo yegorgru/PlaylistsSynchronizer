@@ -15,7 +15,7 @@ func NewGroupPostgres(db *sqlx.DB) *GroupPostgres {
 	return &GroupPostgres{db: db}
 }
 
-func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroupInput) (int, error) {
+func (r *GroupPostgres) Create(userID, roleID int, group models.UserCreateGroup) (int, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return 0, err

@@ -9,6 +9,17 @@ import (
 	"strconv"
 )
 
+// @Summary Get All Playlist
+// @Security ApiKeyAuth
+// @Tags playlists
+// @Description get all playlists
+// @ID get-all-playlists
+// @Produce json
+// @Success 200 {object} []models.PlayList
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/playlists [get]
 func (h *Handler) getAllPlayList(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
@@ -24,6 +35,18 @@ func (h *Handler) getAllPlayList(c *gin.Context) {
 	c.JSON(http.StatusOK, playLists)
 }
 
+// @Summary Get Playlist By ID
+// @Security ApiKeyAuth
+// @Tags playlists
+// @Description get playlist by id
+// @ID get-playlist-by-id
+// @Produce json
+// @Param id path int true "playlist id"
+// @Success 200 {object} models.PlayList
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/playlists/{id} [get]
 func (h *Handler) getPlayListById(c *gin.Context) {
 	_, err := getUserId(c)
 	if err != nil {
@@ -53,6 +76,20 @@ func (h *Handler) getPlayListById(c *gin.Context) {
 	c.JSON(http.StatusOK, playlist)
 }
 
+// @Summary Update Playlist
+// @Security ApiKeyAuth
+// @Tags playlists
+// @Description update playlist
+// @ID update-playlist
+// @Accept json
+// @Produce json
+// @Param id path int true "playlist id"
+// @Param input body models.UpdatePlayListInput true "playlist info"
+// @Success 200 {object} models.StatusResponse
+// @Failure 400,401,403,404 {object} models.ErrorResponse
+// @Failure 500 {object} models.ErrorResponse
+// @Failure default {object} models.ErrorResponse
+// @Router /api/playlists/{id} [put]
 func (h *Handler) updatePlayList(c *gin.Context) {
 	userID, err := getUserId(c)
 	if err != nil {
