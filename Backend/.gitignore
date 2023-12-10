@@ -1,1 +1,3 @@
-# gitignore for backend
+#gitignore for backend
+.env
+.idea
