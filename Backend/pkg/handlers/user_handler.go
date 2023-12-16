@@ -19,7 +19,6 @@ import (
 // @Failure 500 {object} models.ErrorResponse
 // @Failure default {object} models.ErrorResponse
 // @Router /api/users/{id} [get]
-
 func (h *Handler) getUserByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
