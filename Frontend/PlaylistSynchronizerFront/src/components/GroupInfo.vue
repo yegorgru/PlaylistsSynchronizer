@@ -38,12 +38,16 @@ onMounted(async () => {
     userMeInfo.value = response3.data;
     console.log(userMeInfo.value);
 
-    const response4 = await axios.get(
-      "http://localhost:8080/api/groups/" + route.params.group_id + "/users/" + userMeInfo.value.id,
-      { headers }
-    );
-    userInfo.value = response4.data;
-    console.log(userInfo.value);
+    try {
+      const response4 = await axios.get(
+        "http://localhost:8080/api/groups/" + route.params.group_id + "/users/" + userMeInfo.value.id,
+        { headers }
+      );
+      userInfo.value = response4.data;
+      console.log(userInfo.value);
+    } catch(err) {
+      userInfo.value = {"roleName": ""};
+    }
   } catch (error) {
     console.error("Error fetching groups:", error);
   }
@@ -51,6 +55,66 @@ onMounted(async () => {
 
 function addTrack() {
     window.location.href = "/add_track/" + groupInfo.value.playListID;
+}
+
+function joinGroup() {
+  const accessToken = localStorage.getItem("access_token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + accessToken,
+  };
+  axios.post('http://localhost:8080/api/groups/' + route.params.group_id + "/users", {}, { headers })
+    .then(response => {
+      console.log(response.data);
+      window.location.reload();
+    })
+    .catch(error => {
+      if(error.data.error.includes("api error: Request had invalid authentication")) {
+        localStorage.removeItem("access_token");
+        window.location.href = '/login';
+      }
+      console.error('Error joining group:', error);
+    });
+}
+
+function leaveGroup() {
+  const accessToken = localStorage.getItem("access_token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + accessToken,
+  };
+  axios.post('http://localhost:8080/api/groups/' + route.params.group_id + "/leave", {}, { headers })
+    .then(response => {
+      console.log(response.data);
+      window.location.reload();
+    })
+    .catch(error => {
+      if(error.data.error.includes("api error: Request had invalid authentication")) {
+        localStorage.removeItem("access_token");
+        window.location.href = '/login';
+      }
+      console.error('Error leaving group:', error);
+    });
+}
+
+function deleteGroup() {
+  const accessToken = localStorage.getItem("access_token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + accessToken,
+  };
+  axios.delete('http://localhost:8080/api/groups/' + route.params.group_id, { headers })
+    .then(response => {
+      console.log(response.data);
+      window.location.href = '/home';
+    })
+    .catch(error => {
+      if(error.data.error.includes("api error: Request had invalid authentication")) {
+        localStorage.removeItem("access_token");
+        window.location.href = '/login';
+      }
+      console.error('Error deleting group:', error);
+    });
 }
 
 </script>
@@ -89,10 +153,23 @@ function addTrack() {
       <p>{{ userInfo.roleName }}</p>
     </div>
 
+    <div v-if="!userInfo.roleName">
+      <button class="btn btn-primary mb-3" @click="joinGroup">Join Group</button>
+    </div>
+    <div v-else-if="userInfo.roleName === 'SUPER ADMIN'">
+      <button class="btn btn-primary mb-3" @click="deleteGroup">Delete Group</button>
+    </div>
+    <div v-else>
+      <button class="btn btn-primary mb-3" @click="leaveGroup">Leave Group</button>
+    </div>
+
+
     <!-- List of Songs -->
     <div class="info-section">
       <h3>List of Songs</h3>
-      <button class="btn btn-primary mb-3" @click="addTrack">Add Track</button>
+      <div v-if="userInfo.roleName">
+        <button class="btn btn-primary mb-3" @click="addTrack">Add Track</button>
+      </div>
       <ul class="list-group">
         <li
           class="list-group-item"
