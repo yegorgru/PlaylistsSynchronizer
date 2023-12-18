@@ -52,6 +52,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		users := api.Group("/users")
 		{
 			users.GET("/:id", h.getUserByID)
+			users.GET("/me", h.getMe)
 		}
 		roles := api.Group("/roles")
 		{
