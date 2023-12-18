@@ -1,9 +1,0 @@
-port: "8080"
-domain: "http://localhost:"
-db:
-  username: "postgres"
-  host: "db"
-  password: "0961533469Vi"
-  port: "5432"
-  dbname: "playlists_synchronizer"
-  sslmode: "disable"

@@ -1,4 +1,5 @@
 <script setup>
+  import axios from 'axios'
 </script>
 
 <template>
@@ -35,8 +36,20 @@
 <script>
 export default {
   methods: {
-    loginWithPlatform(platform) {
-      console.log(`Logging in with ${platform}`);
+    async loginWithPlatform(platform) {
+      try {
+        let request = "http://localhost:8080/auth/" + platform + "-login";
+        const response = await axios.get(request);    
+
+        const accessToken = response.data.accessToken;
+
+        // Save the access token to localStorage or Vuex state as needed
+        localStorage.setItem('access_token', accessToken);
+
+        console.log(`Logged in with ${platform}`);
+      } catch (error) {
+        console.error(`Error logging in with ${platform}:`, error);
+      }
     }
   }
 };
