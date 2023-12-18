@@ -54,6 +54,7 @@ type Track struct {
 	ID             int    `json:"id" db:"id"`
 	SpotifyUri     string `json:"spotifyUri" db:"spotifyuri"`
 	YouTubeMusicID string `json:"youTubeMusicID" db:"youtubemusicid"`
+	Name           string `json:"name" db:"name"`
 }
 
 type PlayListTrack struct {
@@ -71,6 +72,7 @@ type CreateTrack struct {
 	SpotifyUri             string `json:"spotifyUri" db:"spotifyuri"`
 	YouTubeMusicID         string `json:"youTubeMusicID" db:"youtubemusicid"`
 	PlayListYouTubeMusicID string `json:"PlayListYouTubeMusicID" db:"playlistyoutubemusicid"`
+	Name                   string `json:"name" db:"name"`
 }
 
 type UserGroupToken struct {

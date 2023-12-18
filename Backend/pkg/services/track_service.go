@@ -37,7 +37,7 @@ func (s *TrackService) Add(input models.AddTrack) (int, error) {
 		return 0, err
 	}
 	var track models.CreateTrack
-	track = models.CreateTrack{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID}
+	track = models.CreateTrack{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID, Name: input.Name}
 	if isTrackExist == nil {
 		id, err := s.repoTrack.Create(track)
 		if err != nil {

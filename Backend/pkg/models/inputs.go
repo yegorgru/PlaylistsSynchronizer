@@ -9,11 +9,13 @@ type UserGroupInput struct {
 type AddTrackInput struct {
 	SpotifyUri     string `json:"spotifyUri" binding:"required,min=1"`
 	YouTubeMusicID string `json:"youTubeMusicID" binding:"required,min=1"`
+	Name           string `json:"name" binding:"required,min=1"`
 }
 
 type AddTrack struct {
 	SpotifyUri     string `json:"spotifyUri" binding:"required,min=1"`
 	YouTubeMusicID string `json:"youTubeMusicID" binding:"required,min=1"`
+	Name           string `json:"name" binding:"required,min=1"`
 	PlayListID     int
 	GroupID        int
 	UserID         int
