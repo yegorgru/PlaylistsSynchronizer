@@ -81,7 +81,7 @@ onMounted(async () => {
     <!-- User's Role in Group -->
     <div class="info-section">
       <h3>User's Role in Group</h3>
-      <p>{{ userRole }}</p>
+      <p>{{ userInfo.roleName }}</p>
     </div>
 
     <!-- List of Songs -->
