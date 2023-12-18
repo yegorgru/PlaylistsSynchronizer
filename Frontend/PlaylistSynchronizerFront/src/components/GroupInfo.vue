@@ -48,6 +48,11 @@ onMounted(async () => {
     console.error("Error fetching groups:", error);
   }
 });
+
+function addTrack() {
+    window.location.href = "/add_track/" + groupInfo.value.playListID;
+}
+
 </script>
 
 <template>
@@ -87,6 +92,7 @@ onMounted(async () => {
     <!-- List of Songs -->
     <div class="info-section">
       <h3>List of Songs</h3>
+      <button class="btn btn-primary mb-3" @click="addTrack">Add Track</button>
       <ul class="list-group">
         <li
           class="list-group-item"

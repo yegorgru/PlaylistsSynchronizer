@@ -20,7 +20,7 @@
     });
 
     function createGroup() {
-    window.location.href = '/create_group';
+        window.location.href = '/create_group';
     }
 </script>
 
