@@ -47,7 +47,7 @@ export default {
         localStorage.setItem('access_token', accessToken);
 
         console.log(`Logged in with ${platform}`);
-        window.location.href = '/';
+        window.location.href = '/home';
       } catch (error) {
         console.error(`Error logging in with ${platform}:`, error);
       }

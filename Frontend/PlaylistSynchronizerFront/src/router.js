@@ -1,9 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginComponent from '@/components/Login.vue';
+import CreateGroupComponent from '@/components/CreateGroup.vue';
+import HomeComponent from '@/components/Home.vue';
 import AppComponent from '@/App.vue';
 
 const routes = [
   { path: '/login', component: LoginComponent },
+  { path: '/create_group', component: CreateGroupComponent, meta: { requiresAuth: true } },
+  { path: '/home', component: HomeComponent, meta: { requiresAuth: true } },
   { path: '/', component: AppComponent, meta: { requiresAuth: true } },
 ];
 
@@ -16,11 +20,19 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!isAuthenticated()) {
       next('/login');
+    }
+    else if (to.path === '/') {
+      next('/home');
     } else {
       next();
     }
   } else {
-    next();
+    if (isAuthenticated()) {
+      next('/home');
+    }
+    else {
+      next();
+    }
   }
 });
 
