@@ -30,14 +30,15 @@
       <button class="btn btn-primary mb-3" @click="createGroup">Create Group</button>
     </div>
     <div class="list-group">
-      <a
-        v-for="(group, index) in groups"
-        :key="index"
-        class="list-group-item list-group-item-action"
-      >
-        <h5 class="mb-1">{{ group.name }}</h5>
-        <p class="mb-1">{{ group.description }}</p>
-      </a>
+        <router-link
+            v-for="(group, index) in groups"
+            :key="index"
+            class="list-group-item list-group-item-action"
+            :to="{ path: '/group_info/' + group.id }"
+            >
+            <h5 class="mb-1">{{ group.name }}</h5>
+            <p class="mb-1">{{ group.description }}</p>
+        </router-link>
       <div v-if="groups.length === 0" class="text-muted">No groups available</div>
     </div>
   </div>
