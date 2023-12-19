@@ -37,13 +37,12 @@ func (h *Handler) getUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// @Summary Get User By ID
+// @Summary Get Current User
 // @Security ApiKeyAuth
 // @Tags users
-// @Description get user by id
-// @ID get-user-by-id
+// @Description get current user
+// @ID get-current-user
 // @Produce json
-// @Param id path int true "user id"
 // @Success 200 {object} models.User
 // @Failure 400,401,403,404 {object} models.ErrorResponse
 // @Failure 500 {object} models.ErrorResponse
