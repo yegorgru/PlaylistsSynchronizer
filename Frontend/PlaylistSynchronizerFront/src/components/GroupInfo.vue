@@ -2,6 +2,7 @@
 import { useRoute } from "vue-router";
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import UserDropdown from './UserDropDown.vue';
 
 const route = useRoute();
 const groupInfo = ref([]);
@@ -78,6 +79,26 @@ function joinGroup() {
         window.location.href = '/login';
       }
       console.error('Error joining group:', error);
+    });
+}
+
+function kickUser(userId) {
+  const accessToken = localStorage.getItem("access_token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + accessToken,
+  };
+  axios.delete('http://localhost:8080/api/groups/' + route.params.group_id + "/users/" + userId, { headers })
+    .then(response => {
+      console.log(response.data);
+      window.location.reload();
+    })
+    .catch(error => {
+      if(error.data.error.includes("api error: Request had invalid authentication")) {
+        localStorage.removeItem("access_token");
+        window.location.href = '/login';
+      }
+      console.error('Error kicking user:', error);
     });
 }
 
@@ -205,12 +226,12 @@ function deleteGroup() {
           :key="index"
         >
           <div class="d-flex justify-content-between">
-            <div class="col-lg-6">{{ song.name }}</div>
+            <div class="col-6">{{ song.name }}</div>
             <div v-if="userInfo.roleName === 'ADMIN'">
-               <button class="btn btn-primary col-lg-6 mb-3" @click="deleteTrack(song.id)">Delete Track</button>     
+               <button class="btn btn-primary col-6 mb-3 w-100" @click="deleteTrack(song.id)">Delete Track</button>     
             </div>
             <div v-if="userInfo.roleName === 'SUPER ADMIN'">
-               <button class="btn btn-primary col-lg-6 mb-3" @click="deleteTrack(song.id)">Delete Track</button>     
+               <button class="btn btn-primary col-6 mb-3 w-100" @click="deleteTrack(song.id)">Delete Track</button>     
             </div>
           </div>
         </li>
@@ -230,10 +251,31 @@ function deleteGroup() {
             <div class="col-md-4">{{ user.platform }}</div>
             <div class="col-md-4">{{ user.roleName }}</div>
           </div>
+          <div v-if="userInfo.roleName === 'SUPER ADMIN'">
+            <div v-if="user.roleName === 'USER'">
+              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">Kick User</button>
+            </div>
+            <div v-if="user.id !== userMeInfo.id">
+              <UserDropdown :userId=user.id :myId=userMeInfo.id :groupId=Number(route.params.group_id)></UserDropdown>
+            </div>
+          </div>
+          <div v-if="userInfo.roleName === 'ADMIN'">
+            <div v-if="user.roleName === 'USER'">
+              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">Kick User</button>
+            </div>
+          </div>
         </li>
       </ul>
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  components: {
+    UserDropdown,
+  },
+};
+</script>
 
 <style scoped></style>

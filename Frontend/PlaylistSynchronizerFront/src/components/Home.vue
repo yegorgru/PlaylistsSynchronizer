@@ -19,13 +19,33 @@
     }
     });
 
-    function createGroup() {
-        window.location.href = '/create_group';
+    function logout() {
+        const accessToken = localStorage.getItem("access_token");
+        const headers = {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + accessToken,
+        };
+        axios.post('http://localhost:8080/auth/logout/', {}, { headers })
+            .then(response => {
+            console.log(response.data);
+            localStorage.removeItem("access_token");
+            window.location.reload();
+            })
+            .catch(error => {
+            if(error.data.error.includes("api error: Request had invalid authentication")) {
+                localStorage.removeItem("access_token");
+                window.location.href = '/login';
+            }
+            console.error('Error joining group:', error);
+            });
     }
 </script>
 
 <template>
   <div id="app" class="container py-4">
+    <div>
+      <button class="btn btn-primary mb-3" @click="logout">Logout</button>
+    </div>
     <div>
       <button class="btn btn-primary mb-3" @click="createGroup">Create Group</button>
     </div>

@@ -43,7 +43,6 @@ export default {
 
         const accessToken = response.data.accessToken;
 
-        // Save the access token to localStorage or Vuex state as needed
         localStorage.setItem('access_token', accessToken);
 
         console.log(`Logged in with ${platform}`);
