@@ -1,7 +1,15 @@
 basePath: /
 definitions:
+  models.AccessTokenResponse:
+    properties:
+      accessToken:
+        type: string
+    type: object
   models.AddTrackInput:
     properties:
+      name:
+        minLength: 1
+        type: string
       spotifyUri:
         minLength: 1
         type: string
@@ -9,6 +17,7 @@ definitions:
         minLength: 1
         type: string
     required:
+    - name
     - spotifyUri
     - youTubeMusicID
     type: object
@@ -82,6 +91,8 @@ definitions:
     properties:
       id:
         type: integer
+      name:
+        type: string
       spotifyUri:
         type: string
       youTubeMusicID:
@@ -115,6 +126,21 @@ definitions:
         maxLength: 20
         minLength: 1
         type: string
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      platform:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - platform
+    - username
     type: object
   models.UserCreateGroupInput:
     properties:
@@ -938,6 +964,92 @@ paths:
       summary: Delete Track
       tags:
       - tracks
+  /api/users/{id}:
+    get:
+      description: get user by id
+      operationId: get-user-by-id
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get User By ID
+      tags:
+      - users
+  /api/users/me:
+    get:
+      description: get current user
+      operationId: get-current-user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get Current User
+      tags:
+      - users
   /auth/logout:
     post:
       description: logout from service
@@ -987,8 +1099,7 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/models.AccessTokenResponse'
         "400":
           description: Bad Request
           schema:
