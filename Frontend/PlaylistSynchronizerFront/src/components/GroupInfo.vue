@@ -81,6 +81,26 @@ function joinGroup() {
     });
 }
 
+function deleteTrack(songid) {
+  const accessToken = localStorage.getItem("access_token");
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + accessToken,
+  };
+  axios.delete('http://localhost:8080/api/playlists/' + route.params.group_id + '/tracks/' + songid, { headers })
+    .then(response => {
+      console.log(response.data);
+      window.location.reload();
+    })
+    .catch(error => {
+      if(error.data.error.includes("api error: Request had invalid authentication")) {
+        localStorage.removeItem("access_token");
+        window.location.href = '/login';
+      }
+      console.error('Error deleting track:', error);
+    });
+}
+
 function leaveGroup() {
   const accessToken = localStorage.getItem("access_token");
   const headers = {
@@ -184,8 +204,14 @@ function deleteGroup() {
           v-for="(song, index) in groupInfo.tracks"
           :key="index"
         >
-          <div class="row">
-            <div class="col-md-12">{{ song.name }}</div>
+          <div class="d-flex justify-content-between">
+            <div class="col-lg-6">{{ song.name }}</div>
+            <div v-if="userInfo.roleName === 'ADMIN'">
+               <button class="btn btn-primary col-lg-6 mb-3" @click="deleteTrack(song.id)">Delete Track</button>     
+            </div>
+            <div v-if="userInfo.roleName === 'SUPER ADMIN'">
+               <button class="btn btn-primary col-lg-6 mb-3" @click="deleteTrack(song.id)">Delete Track</button>     
+            </div>
           </div>
         </li>
       </ul>
