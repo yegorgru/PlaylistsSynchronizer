@@ -63,7 +63,7 @@
             <h5 class="mb-1">{{ group.name }}</h5>
             <p class="mb-1">{{ group.description }}</p>
         </router-link>
-      <div v-if="groups.length === 0" class="text-muted">No groups available</div>
+        <div v-if="!groups === 0" class="text-muted">No groups available</div>
     </div>
   </div>
 </template>
