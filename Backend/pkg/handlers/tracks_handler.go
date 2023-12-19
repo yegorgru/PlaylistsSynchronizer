@@ -61,7 +61,7 @@ func (h *Handler) addTrack(c *gin.Context) {
 	}
 	if isValidUser {
 		newTrack := models.AddTrack{SpotifyUri: input.SpotifyUri, YouTubeMusicID: input.YouTubeMusicID,
-			PlayListID: playList.ID, GroupID: playList.GroupID, UserID: userID}
+			Name: input.Name, PlayListID: playList.ID, GroupID: playList.GroupID, UserID: userID}
 		id, err := h.services.Track.Add(newTrack)
 		if err != nil {
 			models.NewErrorResponse(c, http.StatusBadRequest, err.Error())

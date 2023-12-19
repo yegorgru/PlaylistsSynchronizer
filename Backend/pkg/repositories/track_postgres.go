@@ -16,8 +16,8 @@ func NewTrackPostgres(db *sqlx.DB) *TrackPostgres {
 
 func (t *TrackPostgres) Create(track models.CreateTrack) (int, error) {
 	var trackID int
-	query := fmt.Sprintf("INSERT INTO %s (spotifyuri, youtubemusicid) values ($1, $2) RETURNING id", tracksTable)
-	row1 := t.db.QueryRow(query, track.SpotifyUri, track.YouTubeMusicID)
+	query := fmt.Sprintf("INSERT INTO %s (spotifyuri, youtubemusicid, name) values ($1, $2, $3) RETURNING id", tracksTable)
+	row1 := t.db.QueryRow(query, track.SpotifyUri, track.YouTubeMusicID, track.Name)
 	if err := row1.Scan(&trackID); err != nil {
 		return 0, err
 	}
@@ -74,7 +74,7 @@ func (t *TrackPostgres) GetByPlayListTrackID(playListID, trackID int) ([]models.
 
 func (t *TrackPostgres) GetByPlayListID(playListID int) ([]models.Track, error) {
 	var tracks []models.Track
-	query := fmt.Sprintf("SELECT t.id, t.spotifyuri, t.youtubemusicid "+
+	query := fmt.Sprintf("SELECT t.id, t.spotifyuri, t.youtubemusicid, t.name "+
 		"FROM %s t INNER JOIN %s pt ON t.id = pt.trackid WHERE pt.playlistid=$1 ORDER BY t.id ASC", tracksTable, playlistTrackTable)
 	err := t.db.Select(&tracks, query, playListID)
 	return tracks, err

@@ -64,7 +64,8 @@ CREATE TABLE tracks
 (
     ID serial PRIMARY KEY,
     spotifyUri varchar(255) not null unique,
-    youTubeMusicID varchar(255) not null unique
+    youTubeMusicID varchar(255) not null unique,
+    name varchar(255) not null
 );
 
 CREATE TABLE playlist_track
