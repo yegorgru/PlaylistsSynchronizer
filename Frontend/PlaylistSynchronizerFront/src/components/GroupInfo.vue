@@ -192,31 +192,22 @@ function deleteGroup() {
 
       <div class="card">
         <div class="card-body">
-          <!-- Group Name -->
           <div class="info-section">
             <h3>Group Name</h3>
             <p>{{ groupInfo.name }}</p>
           </div>
-
-          <!-- Group Description -->
           <div class="info-section">
             <h3>Group Description</h3>
             <p>{{ groupInfo.description }}</p>
           </div>
-
-          <!-- Playlist Name -->
           <div class="info-section">
             <h3>Playlist Name</h3>
             <p>{{ playlistInfo.name }}</p>
           </div>
-
-          <!-- Playlist Description -->
           <div class="info-section">
             <h3>Playlist Description</h3>
             <p>{{ playlistInfo.description }}</p>
           </div>
-
-          <!-- User's Role in Group -->
           <div class="info-section">
             <h3>User's Role in Group</h3>
             <p>{{ userInfo.roleName }}</p>
@@ -225,17 +216,17 @@ function deleteGroup() {
       </div>
     </div>
 
-    <div v-if="!userInfo.roleName">
+    <div v-if="!userInfo.roleName" class="d-flex justify-content-center p-3">
       <button class="btn btn-primary mb-3" @click="joinGroup">Join Group</button>
     </div>
-    <div v-else-if="userInfo.roleName === 'SUPER ADMIN'" class="d-flex justify-content-center">
+    <div v-else-if="userInfo.roleName === 'SUPER ADMIN'" class="d-flex justify-content-center p-3">
       <button class="btn btn-primary m-2 mt-2 bg-danger" @click="deleteGroup">Delete Group</button>
       <button class="btn btn-primary m-2 mt-2" @click="amendGroup">Amend Group</button>
     </div>
-    <div v-else-if="userInfo.roleName === 'ADMIN'">
+    <div v-else-if="userInfo.roleName === 'ADMIN'" class="d-flex justify-content-center p-3">
       <button class="btn btn-primary mb-3" @click="amendGroup">Amend Group</button>
     </div>
-    <div v-else>
+    <div v-else class="d-flex justify-content-center p-3">
       <button class="btn btn-primary mb-3" @click="leaveGroup">Leave Group</button>
     </div>
 
@@ -255,7 +246,7 @@ function deleteGroup() {
             <div class="col-6">{{ song.name }}</div>
             <div v-if="userInfo.roleName === 'ADMIN'">
               <button
-                class="btn btn-primary col-6 mb-3 w-100"
+                class="btn btn-primary col-6 mb-3 w-100 bg-danger"
                 @click="deleteTrack(song.id)"
               >
                 Delete Track
@@ -263,7 +254,7 @@ function deleteGroup() {
             </div>
             <div v-if="userInfo.roleName === 'SUPER ADMIN'">
               <button
-                class="btn btn-primary col-6 mb-3 w-100"
+                class="btn btn-primary col-6 mb-3 w-100 bg-danger"
                 @click="deleteTrack(song.id)"
               >
                 Delete Track
@@ -285,13 +276,13 @@ function deleteGroup() {
             <div class="col-md-4">{{ user.platform }}</div>
             <div class="col-md-4">{{ user.roleName }}</div>
           </div>
-          <div v-if="userInfo.roleName === 'SUPER ADMIN'">
-            <div v-if="user.roleName === 'USER'">
-              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">
+          <div v-if="userInfo.roleName === 'SUPER ADMIN'" class="d-flex justify-content-center">
+            <div v-if="user.roleName === 'USER'" class="w-25">
+              <button class="btn btn-primary col-lg-6 mb-3 bg-danger" @click="kickUser(user.id)">
                 Kick User
               </button>
             </div>
-            <div v-if="user.id !== userMeInfo.id">
+            <div v-if="user.id !== userMeInfo.id" class="w-75">
               <UserDropdown
                 :userId="user.id"
                 :myId="userMeInfo.id"
@@ -300,7 +291,7 @@ function deleteGroup() {
             </div>
           </div>
           <div v-if="userInfo.roleName === 'ADMIN'">
-            <div v-if="user.roleName === 'USER'">
+            <div v-if="user.roleName === 'USER'" class="w-25">
               <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">
                 Kick User
               </button>

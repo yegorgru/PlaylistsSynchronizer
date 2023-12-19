@@ -3,13 +3,13 @@ import axios from "axios";
 </script>
 
 <template>
-    <div>
-      <select v-model="selectedUserRole">
+    <div class="d-flex align-items-center">
+    <select class="form-select me-3" v-model="selectedUserRole">
         <option value="USER">USER</option>
         <option value="ADMIN">ADMIN</option>
         <option value="SUPER ADMIN">SUPER ADMIN</option>
-      </select>
-      <button class="btn btn-primary col-lg-6 mb-3" @click="updateUserRole">Update</button>
+    </select>
+    <button class="btn btn-primary" @click="updateUserRole">Update</button>
     </div>
   </template>
   
