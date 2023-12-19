@@ -2,7 +2,7 @@
 import { useRoute } from "vue-router";
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import UserDropdown from './UserDropDown.vue';
+import UserDropdown from "./UserDropDown.vue";
 
 const route = useRoute();
 const groupInfo = ref([]);
@@ -32,22 +32,22 @@ onMounted(async () => {
     playlistInfo.value = response2.data;
     console.log(playlistInfo.value);
 
-    const response3 = await axios.get(
-      "http://localhost:8080/api/users/me",
-      { headers }
-    );
+    const response3 = await axios.get("http://localhost:8080/api/users/me", { headers });
     userMeInfo.value = response3.data;
     console.log(userMeInfo.value);
 
     try {
       const response4 = await axios.get(
-        "http://localhost:8080/api/groups/" + route.params.group_id + "/users/" + userMeInfo.value.id,
+        "http://localhost:8080/api/groups/" +
+          route.params.group_id +
+          "/users/" +
+          userMeInfo.value.id,
         { headers }
       );
       userInfo.value = response4.data;
       console.log(userInfo.value);
-    } catch(err) {
-      userInfo.value = {"roleName": ""};
+    } catch (err) {
+      userInfo.value = { roleName: "" };
     }
   } catch (error) {
     console.error("Error fetching groups:", error);
@@ -55,11 +55,11 @@ onMounted(async () => {
 });
 
 function addTrack() {
-    window.location.href = "/add_track/" + groupInfo.value.playListID;
+  window.location.href = "/add_track/" + groupInfo.value.playListID;
 }
 
 function amendGroup() {
-    window.location.href = "/amend_group/" + route.params.group_id;
+  window.location.href = "/amend_group/" + route.params.group_id;
 }
 
 function joinGroup() {
@@ -68,17 +68,22 @@ function joinGroup() {
     "Content-Type": "application/json",
     Authorization: "Bearer " + accessToken,
   };
-  axios.post('http://localhost:8080/api/groups/' + route.params.group_id + "/users", {}, { headers })
-    .then(response => {
+  axios
+    .post(
+      "http://localhost:8080/api/groups/" + route.params.group_id + "/users",
+      {},
+      { headers }
+    )
+    .then((response) => {
       console.log(response.data);
       window.location.reload();
     })
-    .catch(error => {
-      if(error.data.error.includes("api error: Request had invalid authentication")) {
+    .catch((error) => {
+      if (error.data.error.includes("api error: Request had invalid authentication")) {
         localStorage.removeItem("access_token");
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
-      console.error('Error joining group:', error);
+      console.error("Error joining group:", error);
     });
 }
 
@@ -88,17 +93,21 @@ function kickUser(userId) {
     "Content-Type": "application/json",
     Authorization: "Bearer " + accessToken,
   };
-  axios.delete('http://localhost:8080/api/groups/' + route.params.group_id + "/users/" + userId, { headers })
-    .then(response => {
+  axios
+    .delete(
+      "http://localhost:8080/api/groups/" + route.params.group_id + "/users/" + userId,
+      { headers }
+    )
+    .then((response) => {
       console.log(response.data);
       window.location.reload();
     })
-    .catch(error => {
-      if(error.data.error.includes("api error: Request had invalid authentication")) {
+    .catch((error) => {
+      if (error.data.error.includes("api error: Request had invalid authentication")) {
         localStorage.removeItem("access_token");
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
-      console.error('Error kicking user:', error);
+      console.error("Error kicking user:", error);
     });
 }
 
@@ -108,17 +117,24 @@ function deleteTrack(songid) {
     "Content-Type": "application/json",
     Authorization: "Bearer " + accessToken,
   };
-  axios.delete('http://localhost:8080/api/playlists/' + route.params.group_id + '/tracks/' + songid, { headers })
-    .then(response => {
+  axios
+    .delete(
+      "http://localhost:8080/api/playlists/" +
+        route.params.group_id +
+        "/tracks/" +
+        songid,
+      { headers }
+    )
+    .then((response) => {
       console.log(response.data);
       window.location.reload();
     })
-    .catch(error => {
-      if(error.data.error.includes("api error: Request had invalid authentication")) {
+    .catch((error) => {
+      if (error.data.error.includes("api error: Request had invalid authentication")) {
         localStorage.removeItem("access_token");
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
-      console.error('Error deleting track:', error);
+      console.error("Error deleting track:", error);
     });
 }
 
@@ -128,17 +144,22 @@ function leaveGroup() {
     "Content-Type": "application/json",
     Authorization: "Bearer " + accessToken,
   };
-  axios.post('http://localhost:8080/api/groups/' + route.params.group_id + "/leave", {}, { headers })
-    .then(response => {
+  axios
+    .post(
+      "http://localhost:8080/api/groups/" + route.params.group_id + "/leave",
+      {},
+      { headers }
+    )
+    .then((response) => {
       console.log(response.data);
       window.location.reload();
     })
-    .catch(error => {
-      if(error.data.error.includes("api error: Request had invalid authentication")) {
+    .catch((error) => {
+      if (error.data.error.includes("api error: Request had invalid authentication")) {
         localStorage.removeItem("access_token");
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
-      console.error('Error leaving group:', error);
+      console.error("Error leaving group:", error);
     });
 }
 
@@ -148,62 +169,68 @@ function deleteGroup() {
     "Content-Type": "application/json",
     Authorization: "Bearer " + accessToken,
   };
-  axios.delete('http://localhost:8080/api/groups/' + route.params.group_id, { headers })
-    .then(response => {
+  axios
+    .delete("http://localhost:8080/api/groups/" + route.params.group_id, { headers })
+    .then((response) => {
       console.log(response.data);
-      window.location.href = '/home';
+      window.location.href = "/home";
     })
-    .catch(error => {
-      if(error.data.error.includes("api error: Request had invalid authentication")) {
+    .catch((error) => {
+      if (error.data.error.includes("api error: Request had invalid authentication")) {
         localStorage.removeItem("access_token");
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
-      console.error('Error deleting group:', error);
+      console.error("Error deleting group:", error);
     });
 }
-
 </script>
 
 <template>
   <div class="group-info container py-4">
-    <h2>Group Information</h2>
+    <div class="group-info container py-4 info">
+      <h2>Group Information</h2>
 
-    <!-- Group Name -->
-    <div class="info-section">
-      <h3>Group Name</h3>
-      <p>{{ groupInfo.name }}</p>
-    </div>
+      <div class="card">
+        <div class="card-body">
+          <!-- Group Name -->
+          <div class="info-section">
+            <h3>Group Name</h3>
+            <p>{{ groupInfo.name }}</p>
+          </div>
 
-    <!-- Group Description -->
-    <div class="info-section">
-      <h3>Group Description</h3>
-      <p>{{ groupInfo.description }}</p>
-    </div>
+          <!-- Group Description -->
+          <div class="info-section">
+            <h3>Group Description</h3>
+            <p>{{ groupInfo.description }}</p>
+          </div>
 
-    <!-- Playlist Name -->
-    <div class="info-section">
-      <h3>Playlist Name</h3>
-      <p>{{ playlistInfo.name }}</p>
-    </div>
+          <!-- Playlist Name -->
+          <div class="info-section">
+            <h3>Playlist Name</h3>
+            <p>{{ playlistInfo.name }}</p>
+          </div>
 
-    <!-- Playlist Description -->
-    <div class="info-section">
-      <h3>Playlist Description</h3>
-      <p>{{ playlistInfo.description }}</p>
-    </div>
+          <!-- Playlist Description -->
+          <div class="info-section">
+            <h3>Playlist Description</h3>
+            <p>{{ playlistInfo.description }}</p>
+          </div>
 
-    <!-- User's Role in Group -->
-    <div class="info-section">
-      <h3>User's Role in Group</h3>
-      <p>{{ userInfo.roleName }}</p>
+          <!-- User's Role in Group -->
+          <div class="info-section">
+            <h3>User's Role in Group</h3>
+            <p>{{ userInfo.roleName }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="!userInfo.roleName">
       <button class="btn btn-primary mb-3" @click="joinGroup">Join Group</button>
     </div>
-    <div v-else-if="userInfo.roleName === 'SUPER ADMIN'">
-      <button class="btn btn-primary m-2" @click="deleteGroup">Delete Group</button>
-      <button class="btn btn-primary m-2" @click="amendGroup">Amend Group</button>
+    <div v-else-if="userInfo.roleName === 'SUPER ADMIN'" class="d-flex justify-content-center">
+      <button class="btn btn-primary m-2 mt-2 bg-danger" @click="deleteGroup">Delete Group</button>
+      <button class="btn btn-primary m-2 mt-2" @click="amendGroup">Amend Group</button>
     </div>
     <div v-else-if="userInfo.roleName === 'ADMIN'">
       <button class="btn btn-primary mb-3" @click="amendGroup">Amend Group</button>
@@ -211,7 +238,6 @@ function deleteGroup() {
     <div v-else>
       <button class="btn btn-primary mb-3" @click="leaveGroup">Leave Group</button>
     </div>
-
 
     <!-- List of Songs -->
     <div class="info-section">
@@ -228,17 +254,25 @@ function deleteGroup() {
           <div class="d-flex justify-content-between">
             <div class="col-6">{{ song.name }}</div>
             <div v-if="userInfo.roleName === 'ADMIN'">
-               <button class="btn btn-primary col-6 mb-3 w-100" @click="deleteTrack(song.id)">Delete Track</button>     
+              <button
+                class="btn btn-primary col-6 mb-3 w-100"
+                @click="deleteTrack(song.id)"
+              >
+                Delete Track
+              </button>
             </div>
             <div v-if="userInfo.roleName === 'SUPER ADMIN'">
-               <button class="btn btn-primary col-6 mb-3 w-100" @click="deleteTrack(song.id)">Delete Track</button>     
+              <button
+                class="btn btn-primary col-6 mb-3 w-100"
+                @click="deleteTrack(song.id)"
+              >
+                Delete Track
+              </button>
             </div>
           </div>
         </li>
       </ul>
-      <div v-if="!groupInfo.tracks">
-        There are no tracks
-      </div>
+      <div v-if="!groupInfo.tracks">There are no tracks</div>
     </div>
 
     <!-- List of Users -->
@@ -253,15 +287,23 @@ function deleteGroup() {
           </div>
           <div v-if="userInfo.roleName === 'SUPER ADMIN'">
             <div v-if="user.roleName === 'USER'">
-              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">Kick User</button>
+              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">
+                Kick User
+              </button>
             </div>
             <div v-if="user.id !== userMeInfo.id">
-              <UserDropdown :userId=user.id :myId=userMeInfo.id :groupId=Number(route.params.group_id)></UserDropdown>
+              <UserDropdown
+                :userId="user.id"
+                :myId="userMeInfo.id"
+                :groupId="Number(route.params.group_id)"
+              ></UserDropdown>
             </div>
           </div>
           <div v-if="userInfo.roleName === 'ADMIN'">
             <div v-if="user.roleName === 'USER'">
-              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">Kick User</button>
+              <button class="btn btn-primary col-lg-6 mb-3" @click="kickUser(user.id)">
+                Kick User
+              </button>
             </div>
           </div>
         </li>
@@ -278,4 +320,10 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+    .info {
+        background-color: #FFE382;
+        border-radius: 10px;
+        color: #9A3B3B;
+    }
+</style>

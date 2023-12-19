@@ -19,6 +19,10 @@
     }
     });
 
+    function createGroup() {
+        window.location.href = '/create_group';
+    }
+
     function logout() {
         const accessToken = localStorage.getItem("access_token");
         const headers = {
@@ -43,10 +47,10 @@
 
 <template>
   <div id="app" class="container py-4">
-    <div>
-      <button class="btn btn-primary mb-3" @click="logout">Logout</button>
+    <div class="d-flex justify-content-end mb-3">
+      <button class="btn btn-primary mb-3 bg-danger" @click="logout">Logout</button>
     </div>
-    <div>
+    <div class="d-flex justify-content-center mb-3">
       <button class="btn btn-primary mb-3" @click="createGroup">Create Group</button>
     </div>
     <div class="list-group">
