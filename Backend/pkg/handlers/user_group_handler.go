@@ -274,7 +274,7 @@ func (h *Handler) deleteUserGroup(c *gin.Context) {
 		models.NewErrorResponse(c, http.StatusBadRequest, "user validation error")
 		return
 	}
-	if isValidUser && userID != deleteUserID {
+	if isValidUser && userID != deleteUserID && isUserExist.RoleName == "USER" {
 		if err := h.services.UserGroup.Delete(isUserExist.Platform, deleteUserID, groupID); err != nil {
 			models.NewErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
