@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginComponent from '@/components/Login.vue';
 import CreateGroupComponent from '@/components/CreateGroup.vue';
+import AmendGroupComponent from '@/components/AmendGroup.vue';
 import GroupInfoComponent from '@/components/GroupInfo.vue';
 import AddTrackComponent from '@/components/AddTrack.vue';
 import HomeComponent from '@/components/Home.vue';
@@ -9,6 +10,7 @@ import AppComponent from '@/App.vue';
 const routes = [
   { path: '/login', component: LoginComponent },
   { path: '/create_group', component: CreateGroupComponent, meta: { requiresAuth: true } },
+  { path: '/amend_group/:group_id', component: AmendGroupComponent, meta: { requiresAuth: true } },
   { path: '/group_info/:group_id', component: GroupInfoComponent, meta: { requiresAuth: true } },
   { path: '/add_track/:playlist_id', component: AddTrackComponent, meta: { requiresAuth: true } },
   { path: '/home', component: HomeComponent, meta: { requiresAuth: true } },

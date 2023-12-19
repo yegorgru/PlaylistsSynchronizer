@@ -57,6 +57,10 @@ function addTrack() {
     window.location.href = "/add_track/" + groupInfo.value.playListID;
 }
 
+function amendGroup() {
+    window.location.href = "/amend_group/" + route.params.group_id;
+}
+
 function joinGroup() {
   const accessToken = localStorage.getItem("access_token");
   const headers = {
@@ -157,7 +161,11 @@ function deleteGroup() {
       <button class="btn btn-primary mb-3" @click="joinGroup">Join Group</button>
     </div>
     <div v-else-if="userInfo.roleName === 'SUPER ADMIN'">
-      <button class="btn btn-primary mb-3" @click="deleteGroup">Delete Group</button>
+      <button class="btn btn-primary m-2" @click="deleteGroup">Delete Group</button>
+      <button class="btn btn-primary m-2" @click="amendGroup">Amend Group</button>
+    </div>
+    <div v-else-if="userInfo.roleName === 'ADMIN'">
+      <button class="btn btn-primary mb-3" @click="amendGroup">Amend Group</button>
     </div>
     <div v-else>
       <button class="btn btn-primary mb-3" @click="leaveGroup">Leave Group</button>
