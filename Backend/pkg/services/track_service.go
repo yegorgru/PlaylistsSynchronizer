@@ -37,7 +37,8 @@ func (s *TrackService) Add(input models.AddTrack) (int, error) {
 		return 0, err
 	}
 	if len(usersSpotify) != 0 {
-		err = spotify.GetTrack(models.SpotifyData{Token: usersSpotify[0].Token}, models.Track{SpotifyUri: input.SpotifyUri})
+		err = spotify.GetTrack(models.SpotifyData{Token: usersSpotify[0].Token, SpotifyUri: usersSpotify[0].SpotifyUri},
+			models.Track{SpotifyUri: input.SpotifyUri})
 		if err != nil {
 			return 0, err
 		}

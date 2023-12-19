@@ -312,7 +312,6 @@ func (s *SpotifyApiService) GetTrack(spotifyData models.SpotifyData, track model
 	if err != nil {
 		return err
 	}
-	fmt.Println(jsonMap)
 	if _, ok := jsonMap["error"]; ok {
 		someErrorMap := jsonMap["error"].(map[string]interface{})
 		if _, ok := someErrorMap["message"]; ok {
