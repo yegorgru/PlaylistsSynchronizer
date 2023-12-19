@@ -31,6 +31,17 @@ func (s *TrackService) GetByPlayListTrackID(playListID, trackID int) ([]models.P
 }
 
 func (s *TrackService) Add(input models.AddTrack) (int, error) {
+	spotify := s.apiService.GetSpotifyServiceApi()
+	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(input.GroupID)
+	if err != nil {
+		return 0, err
+	}
+	if len(usersSpotify) != 0 {
+		err = spotify.GetTrack(models.SpotifyData{Token: usersSpotify[0].Token}, models.Track{SpotifyUri: input.SpotifyUri})
+		if err != nil {
+			return 0, err
+		}
+	}
 	isTrackExist, err := s.repoTrack.GetByTrackApiID(models.ApiTrackID{SpotifyUri: input.SpotifyUri,
 		YouTubeMusic: input.YouTubeMusicID})
 	if err != nil {
@@ -58,7 +69,7 @@ func (s *TrackService) Add(input models.AddTrack) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		id, err := s.addSpotify(track, input.GroupID)
+		id, err := s.addSpotify(track, usersSpotify)
 		if err != nil {
 			return 0, err
 		}
@@ -72,11 +83,7 @@ func (s *TrackService) Add(input models.AddTrack) (int, error) {
 	}
 }
 
-func (s *TrackService) addSpotify(track models.CreateTrack, groupID int) (int, error) {
-	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
-	if err != nil {
-		return 0, err
-	}
+func (s *TrackService) addSpotify(track models.CreateTrack, usersSpotify []models.UserGroupToken) (int, error) {
 	for _, value := range usersSpotify {
 		spotify := s.apiService.GetSpotifyServiceApi()
 		err := spotify.AddTrack(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri}, value.PlayListID,
@@ -112,12 +119,16 @@ func (s *TrackService) addYouTubeMusic(track models.CreateTrack, playListID, gro
 	return track.ID, nil
 }
 
-func (s *TrackService) DeleteFromPlayList(groupID, playListID, trackID int) error {
+func (s *TrackService) DeleteFromPlayList(playListID, groupID, trackID int) error {
+	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
+	if err != nil {
+		return err
+	}
 	track, err := s.repoTrack.GetByID(trackID)
 	if err != nil {
 		return err
 	}
-	err = s.deleteSpotify(groupID, *track)
+	err = s.deleteSpotify(*track, usersSpotify)
 	if err != nil {
 		return err
 	}
@@ -139,12 +150,7 @@ func (s *TrackService) DeleteFromPlayList(groupID, playListID, trackID int) erro
 	return nil
 }
 
-func (s *TrackService) deleteSpotify(groupID int, track models.Track) error {
-	usersSpotify, err := s.repoGroup.GetByGroupIdSpotifyUser(groupID)
-
-	if err != nil {
-		return err
-	}
+func (s *TrackService) deleteSpotify(track models.Track, usersSpotify []models.UserGroupToken) error {
 	for _, value := range usersSpotify {
 		spotify := s.apiService.GetSpotifyServiceApi()
 		err := spotify.DeleteTrack(models.SpotifyData{Token: value.Token, SpotifyUri: value.SpotifyUri},

@@ -74,7 +74,7 @@ func (t *TrackPostgres) GetByPlayListTrackID(playListID, trackID int) ([]models.
 
 func (t *TrackPostgres) GetByPlayListID(playListID int) ([]models.Track, error) {
 	var tracks []models.Track
-	query := fmt.Sprintf("SELECT t.id, t.spotifyuri, t.youtubemusicid "+
+	query := fmt.Sprintf("SELECT t.id, t.spotifyuri, t.youtubemusicid, t.name "+
 		"FROM %s t INNER JOIN %s pt ON t.id = pt.trackid WHERE pt.playlistid=$1 ORDER BY t.id ASC", tracksTable, playlistTrackTable)
 	err := t.db.Select(&tracks, query, playListID)
 	return tracks, err

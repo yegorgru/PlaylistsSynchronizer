@@ -294,6 +294,50 @@ func (s *SpotifyApiService) DeleteTrack(spotifyData models.SpotifyData, playList
 	return nil
 }
 
+func (s *SpotifyApiService) GetTrack(spotifyData models.SpotifyData, track models.Track) error {
+	query := "https://api.spotify.com/v1/tracks/" + track.SpotifyUri
+	client := http.Client{}
+	request, err := http.NewRequest("GET", query, nil)
+	if err != nil {
+		return err
+	}
+	request.Header = http.Header{
+		"Content-Type":  {"application/json"},
+		"Authorization": {"Bearer " + spotifyData.Token},
+	}
+	response, err := client.Do(request)
+	body, _ := io.ReadAll(response.Body)
+	jsonMap := make(map[string]interface{})
+	err = json.Unmarshal(body, &jsonMap)
+	if err != nil {
+		return err
+	}
+	fmt.Println(jsonMap)
+	if _, ok := jsonMap["error"]; ok {
+		someErrorMap := jsonMap["error"].(map[string]interface{})
+		if _, ok := someErrorMap["message"]; ok {
+			msg := someErrorMap["message"].(string)
+			if strings.Contains(msg, "The access token expired") {
+				token, err := s.RefreshSpotifyToken(spotifyData.SpotifyUri)
+				if err != nil {
+					return err
+				}
+				spotifyData.Token = token
+				err = s.GetTrack(spotifyData, track)
+				if err != nil {
+					return err
+				}
+				return nil
+			} else if strings.Contains(msg, "invalid id") {
+				return errors.New("invalid spotify track uri")
+			} else {
+				return errors.New(msg)
+			}
+		}
+	}
+	return nil
+}
+
 func (s *SpotifyApiService) RefreshSpotifyToken(spotifyUri string) (string, error) {
 	token, err := s.repoToken.GetSpotifyToken(spotifyUri)
 	if err != nil {
